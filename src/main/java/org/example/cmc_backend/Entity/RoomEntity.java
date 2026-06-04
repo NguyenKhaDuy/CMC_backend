@@ -25,9 +25,13 @@ public class RoomEntity {
     @Column(name = "total_area")
     private String totalArea;
 
-    @OneToMany(mappedBy = "roomEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
-    List<ScheduleEntity> scheduleEntities = new ArrayList<>();
+    @ManyToOne()
+    @JoinColumn(name = "id_branch")
+    private BranchEntity branchEntity;
 
     @OneToMany(mappedBy = "roomEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<SeatEntity> seatEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "roomEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    List<ScheduleEntity> scheduleEntities = new ArrayList<>();
 }

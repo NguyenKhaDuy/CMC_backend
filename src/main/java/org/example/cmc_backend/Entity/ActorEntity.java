@@ -17,7 +17,7 @@ public class ActorEntity {
     private Long idActor;
 
     @Lob
-    @Column(name = "image")
+    @Column(name = "image", columnDefinition = "LONGBLOB")
     private byte[] image;
 
     @Column(name = "name")
@@ -26,7 +26,6 @@ public class ActorEntity {
     @Column(name = "description")
     private String description;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "actor_movie", joinColumns = @JoinColumn(name = "id_actor"), inverseJoinColumns = @JoinColumn(name = "id_movie"))
-    private List<MovieEntity> movieEntities = new ArrayList<>();
+    @OneToMany(mappedBy = "actorEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE,CascadeType.PERSIST}, orphanRemoval = true)
+    private List<ActorMovieEntity> actorMovieEntities = new ArrayList<>();
 }
