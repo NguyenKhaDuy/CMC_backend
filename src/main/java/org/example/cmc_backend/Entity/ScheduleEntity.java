@@ -37,10 +37,7 @@ public class ScheduleEntity {
     private MovieEntity movieEntity;
 
     @ManyToOne()
-    @JoinColumn(name = "id_branch")
-    private BranchEntity branchEntity;
-
-    @ManyToOne()
     @JoinColumn(name = "id_room")
     private RoomEntity roomEntity;
+
 }

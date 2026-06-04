@@ -26,5 +26,5 @@ public class BranchEntity {
     private String phone;
 
     @OneToMany(mappedBy = "branchEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
-    List<ScheduleEntity> scheduleEntities = new ArrayList<>();
+    List<RoomEntity> roomEntities = new ArrayList<>();
 }

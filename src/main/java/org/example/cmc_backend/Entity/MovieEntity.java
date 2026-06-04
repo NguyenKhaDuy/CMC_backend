@@ -15,8 +15,8 @@ import java.util.List;
 @Table(name = "movie")
 public class MovieEntity {
     @Id
-    @Column(name = "id_user")
-    private String idUser;
+    @Column(name = "id_movie")
+    private String idMovie;
 
     @Column(name = "name_movie")
     private String nameMovie;
@@ -58,9 +58,6 @@ public class MovieEntity {
     @JoinColumn(name = "category_id")
     private CategoryEntity categoryEntity;
 
-    @ManyToMany(mappedBy = "movieEntities", fetch = FetchType.LAZY)
-    List<ActorEntity> actorEntities = new ArrayList<>();
-
     @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<RatingEntity> ratingEntities = new ArrayList<>();
 
@@ -69,4 +66,7 @@ public class MovieEntity {
 
     @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<ScheduleEntity> scheduleEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    List<ActorMovieEntity> actorMovieEntities = new ArrayList<>();
 }
