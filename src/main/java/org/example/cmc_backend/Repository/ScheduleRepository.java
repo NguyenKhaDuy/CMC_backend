@@ -15,4 +15,5 @@ public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> 
     Page<ScheduleEntity> findAllByMovieEntity(MovieEntity movieEntity, Pageable pageable);
     Page<ScheduleEntity> findAllByRoomEntity(RoomEntity roomEntity, Pageable pageable);
     Page<ScheduleEntity> findAllByDate(LocalDate date, Pageable pageable);
+    ScheduleEntity findByMovieEntityAndIdSchedule(MovieEntity movieEntity, Long idSchedule);
 }
