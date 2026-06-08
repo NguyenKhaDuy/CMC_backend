@@ -20,8 +20,8 @@ public class BillFoodDetailEntity {
     private Long total;
 
     @ManyToOne
-    @JoinColumn(name = "id_bill_detail")
-    private BillDetailEntity billDetailEntity;
+    @JoinColumn(name = "id_bill")
+    private BillEntity billEntity;
 
     @ManyToOne
     @JoinColumn(name = "id_size_food")

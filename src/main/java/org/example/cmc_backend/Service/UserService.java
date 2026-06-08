@@ -10,5 +10,5 @@ import org.springframework.stereotype.Service;
 public interface UserService {
     public MessageResponse Register(RegisterRequest registerRequest);
     public MessageResponse UpdateAvatar(UpdateAvatarRequest updateAvatarRequest);
-    public MessageResponse Login(LoginRequest loginRequest);
+    public Object Login(LoginRequest loginRequest);
 }

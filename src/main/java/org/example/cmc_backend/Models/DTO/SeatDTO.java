@@ -1,6 +1,5 @@
 package org.example.cmc_backend.Models.DTO;
 
-import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,4 +10,6 @@ public class SeatDTO {
     private String name;
     private String status;
     private SeatTypeDTO seatTypeDTO;
+    private Long idRoom;
+    private String nameRoom;
 }

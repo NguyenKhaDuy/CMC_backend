@@ -1,14 +1,21 @@
 package org.example.cmc_backend.Service.Implement;
 
+import org.example.cmc_backend.Entity.RoleEntity;
 import org.example.cmc_backend.Entity.UserEntity;
+import org.example.cmc_backend.Models.DTO.LoginDTO;
 import org.example.cmc_backend.Models.Request.LoginRequest;
 import org.example.cmc_backend.Models.Request.RegisterRequest;
 import org.example.cmc_backend.Models.Request.UpdateAvatarRequest;
 import org.example.cmc_backend.Models.Response.MessageResponse;
+import org.example.cmc_backend.Repository.RoleRepository;
 import org.example.cmc_backend.Repository.UserRepository;
 import org.example.cmc_backend.Service.UserService;
+import org.example.cmc_backend.Utils.ConvertByteToBase64;
+import org.example.cmc_backend.Utils.JwtTokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +28,15 @@ public class UserServiceImplement implements UserService {
 
     @Autowired
     PasswordEncoder passwordEncoder;
+
+    @Autowired
+    RoleRepository roleRepository;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    JwtTokenUtils jwtTokenUtils;
 
     @Override
     public MessageResponse Register(RegisterRequest registerRequest) {
@@ -42,7 +58,15 @@ public class UserServiceImplement implements UserService {
             userEntity.setPhone(registerRequest.getPhone());
             userEntity.setFullName(registerRequest.getFullName());
             userEntity.setAvatar(null);
-            userRepository.save(userEntity);
+
+            RoleEntity roleEntity = roleRepository.findByRole("CUSTOMER");
+            userEntity.getRoleEntities().add(roleEntity);
+
+            UserEntity user = userRepository.save(userEntity);
+
+            roleEntity.getUserEntities().add(user);
+            roleRepository.save(roleEntity);
+
             messageResponse.setMessage("User registered successfully");
             messageResponse.setStatus(HttpStatus.CREATED);
         }else {
@@ -82,22 +106,35 @@ public class UserServiceImplement implements UserService {
     }
 
     @Override
-    public MessageResponse Login(LoginRequest loginRequest) {
+    public Object Login(LoginRequest loginRequest) {
         MessageResponse messageResponse = new MessageResponse();
-        try {
+        LoginDTO loginDTO = new LoginDTO();
+        try{
             UserEntity userEntity = userRepository.findByEmail(loginRequest.getEmail());
-            if (userEntity.getPassword().equals(passwordEncoder.encode(loginRequest.getPassword()))) {
-                messageResponse.setMessage("User successfully logged in");
-                messageResponse.setStatus(HttpStatus.OK);
-            }else {
-                messageResponse.setMessage("Wrong password");
-                messageResponse.setStatus(HttpStatus.CONFLICT);
+            if (userEntity != null){
+                if (!passwordEncoder.matches(loginRequest.getPassword(), userEntity.getPassword())){
+                    messageResponse.setMessage("Password incorrect");
+                    messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+                    return messageResponse;
+                }
             }
-        }catch (NoSuchElementException ex){
-            messageResponse.setMessage("User not found");
-            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword(), userEntity.getAuthorities());
+            authenticationManager.authenticate(authenticationToken);
+            String token = jwtTokenUtils.generateToken(userEntity);
+            loginDTO.setMessage("Login success");
+            loginDTO.setToken(token);
+            loginDTO.setId_user(userEntity.getIdUser());
+            loginDTO.setFull_name(userEntity.getFullName());
+            loginDTO.setAvatarBase64(ConvertByteToBase64.toBase64(userEntity.getAvatar()));
+            for (RoleEntity roleEntity : userEntity.getRoleEntities()){
+                loginDTO.getRoles().add(roleEntity.getRole());
+            }
+            loginDTO.setHttpStatus(HttpStatus.OK);
+            return loginDTO;
+        }catch (NullPointerException ex){
+            messageResponse.setMessage("Can not found email");
+            messageResponse.setStatus(HttpStatus.BAD_REQUEST);
             return messageResponse;
         }
-        return messageResponse;
     }
 }
