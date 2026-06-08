@@ -88,6 +88,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 }
             }
         }
+        System.out.println("JWT ERROR");
         return null;
     }
 }
