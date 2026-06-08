@@ -1,18 +1,21 @@
 package org.example.cmc_backend.Service.Implement;
 
+import org.example.cmc_backend.Config.QRCodeGenerator;
 import org.example.cmc_backend.Entity.*;
 import org.example.cmc_backend.Models.DTO.*;
+import org.example.cmc_backend.Models.Request.BookingRequest;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
-import org.example.cmc_backend.Repository.BillRepository;
-import org.example.cmc_backend.Repository.UserRepository;
+import org.example.cmc_backend.Repository.*;
 import org.example.cmc_backend.Service.BillService;
 import org.example.cmc_backend.Utils.ConvertByteToBase64;
+import org.example.cmc_backend.Utils.RandomIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,6 +28,25 @@ public class BillServiceeImplement implements BillService {
     UserRepository userRepository;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    SizeRepository sizeRepository;
+    @Autowired
+    DrinkRepository drinkRepository;
+    @Autowired
+    FoodRepository foodRepository;
+    @Autowired
+    BranchRepository branchRepository;
+    @Autowired
+    MovieRepository movieRepository;
+    @Autowired
+    ScheduleRepository scheduleRepository;
+    @Autowired
+    VoucherRepository voucherRepository;
+    @Autowired
+    SeatRepository seatRepository;
+    @Autowired
+    TicketRepository ticketRepository;
+
 
     @Override
     public Object getAllBillsByUser(String idUser) {
@@ -106,5 +128,85 @@ public class BillServiceeImplement implements BillService {
         dataResponse.setMessage("Success");
         dataResponse.setStatus(HttpStatus.OK);
         return dataResponse;
+    }
+
+    @Override
+    public Object booking(BookingRequest bookingRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        BranchEntity branchEntity = null;
+        MovieEntity movieEntity = null;
+        DrinkEntity drinkEntity = null;
+        FoodEntity foodEntity = null;
+        SizeEntity sizeEntity = null;
+        UserEntity userEntity = null;
+        ScheduleEntity scheduleEntity = null;
+        BillEntity billEntity = new BillEntity();
+        VoucherEntity voucherEntity = null;
+        Long totalPriceTicket = 0L;
+        try{
+            voucherEntity = voucherRepository.findByVoucherCode(bookingRequest.getVoucherCode());
+        }catch (NoSuchElementException ex){
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            messageResponse.setMessage("Voucher Not Found");
+            return messageResponse;
+        }
+        try {
+            userEntity = userRepository.findById(bookingRequest.getIdUser()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found user");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        try{
+            branchEntity = branchRepository.findById(bookingRequest.getIdBranch()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found branch");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        String idBill = RandomIdUtils.generateRandomId("B", 10);
+        billEntity.setUserEntity(userEntity);
+        billEntity.setBranchEntity(branchEntity);
+        billEntity.setCreatedAt(LocalDateTime.now());
+        billEntity.setVoucherEntity(voucherEntity);
+        billEntity.setTotalAmount(bookingRequest.getTotalAmount());
+        billEntity.setIdBill(idBill);
+        try {
+            billEntity.setQr(QRCodeGenerator.generateQRCode(idBill));
+        } catch (Exception e) {
+            messageResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            messageResponse.setMessage("Can not create QR Code");
+            return messageResponse;
+        }
+        BillEntity bill = billRepository.save(billEntity);
+
+        try{
+            movieEntity = movieRepository.findById(bookingRequest.getIdMovie()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found movie");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        try{
+            scheduleEntity = scheduleRepository.findByMovieEntityAndIdSchedule(movieEntity, bookingRequest.getIdSchedule());
+            for (Long idSeat : bookingRequest.getIdSeats()){
+                SeatEntity seatEntity = seatRepository.findById(idSeat).get();
+                //tính tổng giá tiền ghế
+                totalPriceTicket = (long) (seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
+                TicketEntity ticketEntity = new TicketEntity();
+                ticketEntity.setSeatEntity(seatEntity);
+                ticketEntity.setBillEntity(bill);
+                ticketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 10));
+                ticketRepository.save(ticketEntity);
+            }
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found schedule");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+
+
+
+        return null;
     }
 }

@@ -22,9 +22,6 @@ public class BillEntity {
     @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
-    @Column(name = "created_by")
-    private String createdBy;
-
     @Column(name = "total_amount")
     private Double totalAmount;
 
