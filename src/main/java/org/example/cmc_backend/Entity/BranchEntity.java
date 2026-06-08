@@ -27,4 +27,7 @@ public class BranchEntity {
 
     @OneToMany(mappedBy = "branchEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<RoomEntity> roomEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "branchEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    List<BillEntity> billEntities = new ArrayList<>();
 }

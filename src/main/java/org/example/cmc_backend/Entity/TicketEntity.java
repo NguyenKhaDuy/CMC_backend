@@ -16,10 +16,6 @@ public class TicketEntity {
     @Column(name = "id_ticket")
     private String idTicket;
 
-    @Column(name = "created_at")
-    @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
-    private LocalDateTime createdAt;
-
     @ManyToOne
     @JoinColumn(name = "id_seat")
     private SeatEntity seatEntity;

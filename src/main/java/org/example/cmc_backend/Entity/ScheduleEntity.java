@@ -7,6 +7,8 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Getter
 @Setter
@@ -40,4 +42,6 @@ public class ScheduleEntity {
     @JoinColumn(name = "id_room")
     private RoomEntity roomEntity;
 
+    @OneToMany(mappedBy = "scheduleEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<AIChatEntity> aiChatEntities = new ArrayList<>();
 }

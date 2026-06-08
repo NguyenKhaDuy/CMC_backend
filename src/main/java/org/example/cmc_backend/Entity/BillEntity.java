@@ -28,15 +28,26 @@ public class BillEntity {
     @Column(name = "total_amount")
     private Double totalAmount;
 
+    @Lob
+    @Column(name = "qr", columnDefinition = "LONGBLOB")
+    private byte[] qr;
+
     @OneToMany(mappedBy = "billEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<TicketEntity> ticketEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "billEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<BillFoodDetailEntity> billFoodDetailEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "billEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<BillDrinkDetailEntity> billDrinkDetailEntities = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "id_voucher")
     private VoucherEntity voucherEntity;
 
-    @OneToMany(mappedBy = "billEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
-    private List<BillDetailEntity> billDetailEntities = new ArrayList<>();
+    @ManyToOne
+    @JoinColumn(name = "id_branch")
+    private BranchEntity branchEntity;
 
     @ManyToOne
     @JoinColumn(name = "id_user")

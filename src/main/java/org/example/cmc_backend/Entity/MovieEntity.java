@@ -69,4 +69,7 @@ public class MovieEntity {
 
     @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<ActorMovieEntity> actorMovieEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<AIBookingContextEntity> aiBookingContextEntities = new ArrayList<>();
 }
