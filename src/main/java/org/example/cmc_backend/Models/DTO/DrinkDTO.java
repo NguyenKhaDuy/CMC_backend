@@ -8,7 +8,7 @@ import java.util.List;
 @Getter
 @Setter
 public class DrinkDTO {
-    private Long idFood;
+    private Long idDrink;
     private String name;
     private List<DrinkSizeDTO> drinkSizeDTOS;
 }

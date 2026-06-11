@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Table(name = "ai_usage_log")
 public class AIUsageLogEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idUsageLog;
+    @Column(name = "id_usage_log", nullable = false)
+    private String idUsageLog;
 
     @Column(name = "provider")
     private String provider;
@@ -23,16 +23,16 @@ public class AIUsageLogEntity {
     private String modelName;
 
     @Column(name = "prompt_token")
-    private String promptToken;
+    private Integer promptToken;
 
     @Column(name = "completion_token")
-    private String completionToken;
+    private Integer completionToken;
 
     @Column(name = "latency_ms")
-    private String latencyMs;
+    private Integer latencyMs;
 
     @Column(name = "success")
-    private String success;
+    private boolean success;
 
     @Column(name = "error_message")
     private String errorMessage;

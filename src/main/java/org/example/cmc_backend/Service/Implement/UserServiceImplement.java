@@ -3,15 +3,16 @@ package org.example.cmc_backend.Service.Implement;
 import org.example.cmc_backend.Entity.RoleEntity;
 import org.example.cmc_backend.Entity.UserEntity;
 import org.example.cmc_backend.Models.DTO.LoginDTO;
-import org.example.cmc_backend.Models.Request.LoginRequest;
-import org.example.cmc_backend.Models.Request.RegisterRequest;
-import org.example.cmc_backend.Models.Request.UpdateAvatarRequest;
+import org.example.cmc_backend.Models.Request.*;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Repository.RoleRepository;
 import org.example.cmc_backend.Repository.UserRepository;
+import org.example.cmc_backend.Service.MailService;
 import org.example.cmc_backend.Service.UserService;
 import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.example.cmc_backend.Utils.JwtTokenUtils;
+import org.example.cmc_backend.Utils.RandomIdUtils;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -38,6 +39,10 @@ public class UserServiceImplement implements UserService {
     @Autowired
     JwtTokenUtils jwtTokenUtils;
 
+    @Autowired
+    ModelMapper modelMapper;
+
+
     @Override
     public MessageResponse Register(RegisterRequest registerRequest) {
         MessageResponse messageResponse = new MessageResponse();
@@ -52,6 +57,7 @@ public class UserServiceImplement implements UserService {
 
         if (userEntity == null) {
             userEntity = new UserEntity();
+            userEntity.setIdUser(RandomIdUtils.generateRandomId("U", 10));
             userEntity.setEmail(registerRequest.getEmail());
             userEntity.setPassword(passwordEncoder.encode(registerRequest.getPassword()));
             userEntity.setDob(registerRequest.getDob());
@@ -68,7 +74,7 @@ public class UserServiceImplement implements UserService {
             roleRepository.save(roleEntity);
 
             messageResponse.setMessage("User registered successfully");
-            messageResponse.setStatus(HttpStatus.CREATED);
+            messageResponse.setStatus(HttpStatus.OK);
         }else {
             messageResponse.setMessage("User already exists");
             messageResponse.setStatus(HttpStatus.CONFLICT);
@@ -135,6 +141,89 @@ public class UserServiceImplement implements UserService {
             messageResponse.setMessage("Can not found email");
             messageResponse.setStatus(HttpStatus.BAD_REQUEST);
             return messageResponse;
+        }
+    }
+
+    @Override
+    public MessageResponse updateInformation(UpdateUserRequest updateUserRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        UserEntity userEntity = null;
+        try{
+            userEntity = userRepository.findById(updateUserRequest.getIdUser()).get();
+            modelMapper.map(updateUserRequest, userEntity);
+            userRepository.save(userEntity);
+            messageResponse.setMessage("User updated successfully");
+            messageResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("User not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        return messageResponse;
+    }
+
+    @Override
+    public MessageResponse updateEmailUser(UpdateEmailRequest updateEmailRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        try {
+            UserEntity userEntity = userRepository.findById(updateEmailRequest.getIdUser()).get();
+            userEntity.setEmail(updateEmailRequest.getEmail());
+            userRepository.save(userEntity);
+            messageResponse.setMessage("User updated successfully");
+            messageResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("User not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        return messageResponse;
+    }
+
+    @Override
+    public MessageResponse updatePassword(UpdatePasswordRequest updatePasswordRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        try {
+            UserEntity userEntity = userRepository.findById(updatePasswordRequest.getIdUser()).get();
+            if (!userEntity.getPassword().equals(passwordEncoder.encode(updatePasswordRequest.getOldPassword()))){
+                messageResponse.setMessage("Password incorrect");
+                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+                return messageResponse;
+            }
+            userEntity.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
+            messageResponse.setMessage("Password updated successfully");
+            messageResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("User not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        return messageResponse;
+    }
+
+    @Override
+    public MessageResponse forgotPassword(ForgotPasswordRequest forgotPasswordRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        try{
+            UserEntity userEntity = userRepository.findByEmail(forgotPasswordRequest.getEmail());
+            userEntity.setPassword(passwordEncoder.encode(forgotPasswordRequest.getNewPassword()));
+            userRepository.save(userEntity);
+            messageResponse.setMessage("Password forgot successfully");
+            messageResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("User not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        return messageResponse;
+    }
+
+    @Override
+    public UserEntity getUserByEmail(String email) {
+        try {
+            UserEntity userEntity = userRepository.findByEmail(email);
+            return userEntity;
+        }catch (NoSuchElementException ex){
+            return null;
         }
     }
 }

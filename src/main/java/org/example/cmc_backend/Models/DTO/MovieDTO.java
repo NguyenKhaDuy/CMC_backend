@@ -1,7 +1,5 @@
 package org.example.cmc_backend.Models.DTO;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -27,7 +25,7 @@ public class MovieDTO {
     private String trailer;
     private Long idCategory;
     private String category;
-    private List<RantingDTO> rantingDTOS;
+    private List<RatingDTO> ratingDTOS;
     private List<MovieActorDTO> movieActorDTOS;
     private List<ScheduleDTO> scheduleDTOS;
 }

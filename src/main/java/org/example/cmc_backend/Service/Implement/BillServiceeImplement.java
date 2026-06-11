@@ -3,6 +3,8 @@ package org.example.cmc_backend.Service.Implement;
 import org.example.cmc_backend.Config.QRCodeGenerator;
 import org.example.cmc_backend.Entity.*;
 import org.example.cmc_backend.Models.DTO.*;
+import org.example.cmc_backend.Models.Request.BookingDrinkRequest;
+import org.example.cmc_backend.Models.Request.BookingFoodRequest;
 import org.example.cmc_backend.Models.Request.BookingRequest;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
@@ -15,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,6 +49,10 @@ public class BillServiceeImplement implements BillService {
     SeatRepository seatRepository;
     @Autowired
     TicketRepository ticketRepository;
+    @Autowired
+    SizeDrinkRepository sizeDrinkRepository;
+    @Autowired
+    SizeFoodRepository sizeFoodRepository;
 
 
     @Override
@@ -131,7 +138,7 @@ public class BillServiceeImplement implements BillService {
     }
 
     @Override
-    public Object booking(BookingRequest bookingRequest) {
+    public MessageResponse booking(BookingRequest bookingRequest) {
         MessageResponse messageResponse = new MessageResponse();
         BranchEntity branchEntity = null;
         MovieEntity movieEntity = null;
@@ -143,13 +150,23 @@ public class BillServiceeImplement implements BillService {
         BillEntity billEntity = new BillEntity();
         VoucherEntity voucherEntity = null;
         Long totalPriceTicket = 0L;
-        try{
-            voucherEntity = voucherRepository.findByVoucherCode(bookingRequest.getVoucherCode());
-        }catch (NoSuchElementException ex){
-            messageResponse.setStatus(HttpStatus.NOT_FOUND);
-            messageResponse.setMessage("Voucher Not Found");
-            return messageResponse;
+        if (bookingRequest.getVoucherCode() != null) {
+            try{
+                voucherEntity = voucherRepository.findByCode(bookingRequest.getVoucherCode());
+                if (LocalDate.now().isBefore(voucherEntity.getExpiration())){
+                    billEntity.setVoucherEntity(voucherEntity);
+                }else{
+                    billEntity.setVoucherEntity(null);
+                }
+            }catch (NoSuchElementException ex){
+                messageResponse.setStatus(HttpStatus.NOT_FOUND);
+                messageResponse.setMessage("Voucher Not Found");
+                return messageResponse;
+            }
+        }else {
+            billEntity.setVoucherEntity(null);
         }
+
         try {
             userEntity = userRepository.findById(bookingRequest.getIdUser()).get();
         }catch (NoSuchElementException ex){
@@ -168,7 +185,6 @@ public class BillServiceeImplement implements BillService {
         billEntity.setUserEntity(userEntity);
         billEntity.setBranchEntity(branchEntity);
         billEntity.setCreatedAt(LocalDateTime.now());
-        billEntity.setVoucherEntity(voucherEntity);
         billEntity.setTotalAmount(bookingRequest.getTotalAmount());
         billEntity.setIdBill(idBill);
         try {
@@ -178,7 +194,6 @@ public class BillServiceeImplement implements BillService {
             messageResponse.setMessage("Can not create QR Code");
             return messageResponse;
         }
-        BillEntity bill = billRepository.save(billEntity);
 
         try{
             movieEntity = movieRepository.findById(bookingRequest.getIdMovie()).get();
@@ -187,26 +202,67 @@ public class BillServiceeImplement implements BillService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+
+        List<TicketEntity> ticketEntities = new ArrayList<>();
         try{
             scheduleEntity = scheduleRepository.findByMovieEntityAndIdSchedule(movieEntity, bookingRequest.getIdSchedule());
             for (Long idSeat : bookingRequest.getIdSeats()){
                 SeatEntity seatEntity = seatRepository.findById(idSeat).get();
                 //tính tổng giá tiền ghế
-                totalPriceTicket = (long) (seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
+//                totalPriceTicket = (long) (seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
                 TicketEntity ticketEntity = new TicketEntity();
                 ticketEntity.setSeatEntity(seatEntity);
-                ticketEntity.setBillEntity(bill);
+                ticketEntity.setBillEntity(billEntity);
+                ticketEntity.setPriceTicket(seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
                 ticketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 10));
-                ticketRepository.save(ticketEntity);
+                ticketEntities.add(ticketEntity);
             }
+            billEntity.setTicketEntities(ticketEntities);
         }catch (NoSuchElementException ex){
             messageResponse.setMessage("Can not found schedule");
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
 
+        List<BillDrinkDetailEntity> billDrinkDetailEntities = new ArrayList<>();
+        if (!bookingRequest.getBookingDrinkRequests().isEmpty()){
+            for (BookingDrinkRequest bookingDrinkRequest : bookingRequest.getBookingDrinkRequests()) {
+                drinkEntity = drinkRepository.findById(bookingDrinkRequest.getIdDrink()).get();
+                sizeEntity = sizeRepository.findById(bookingDrinkRequest.getIdSize()).get();
+                SizeDrinkEntity sizeDrinkEntity = sizeDrinkRepository.findByDrinkEntityAndSizeEntity(drinkEntity, sizeEntity);
+                BillDrinkDetailEntity billDrinkDetailEntity = new BillDrinkDetailEntity();
+                billDrinkDetailEntity.setQuality(bookingDrinkRequest.getQuality());
+                billDrinkDetailEntity.setSizeDrinkEntity(sizeDrinkEntity);
+                billDrinkDetailEntity.setBillEntity(billEntity);
+                billDrinkDetailEntity.setTotal(sizeDrinkEntity.getPrice() * bookingDrinkRequest.getQuality());
+                billDrinkDetailEntities.add(billDrinkDetailEntity);
+            }
+        }
+        billEntity.setBillDrinkDetailEntities(billDrinkDetailEntities);
 
-
-        return null;
+        List<BillFoodDetailEntity> billFoodDetailEntities = new ArrayList<>();
+        if(!bookingRequest.getBookingFoodRequests().isEmpty()){
+            for (BookingFoodRequest bookingFoodRequest : bookingRequest.getBookingFoodRequests()) {
+                foodEntity = foodRepository.findById(bookingFoodRequest.getIdFood()).get();
+                sizeEntity = sizeRepository.findById(bookingFoodRequest.getIdSize()).get();
+                SizeFoodEntity sizeFoodEntity = sizeFoodRepository.findByFoodEntityAndSizeEntity(foodEntity, sizeEntity);
+                BillFoodDetailEntity billFoodDetailEntity = new BillFoodDetailEntity();
+                billFoodDetailEntity.setQuality(bookingFoodRequest.getQuality());
+                billFoodDetailEntity.setSizeFoodEntity(sizeFoodEntity);
+                billFoodDetailEntity.setBillEntity(billEntity);
+                billFoodDetailEntity.setTotal(sizeFoodEntity.getPrice() * bookingFoodRequest.getQuality());
+                billFoodDetailEntities.add(billFoodDetailEntity);
+            }
+        }
+        billEntity.setBillFoodDetailEntities(billFoodDetailEntities);
+        billRepository.save(billEntity);
+        for (Long idSeat : bookingRequest.getIdSeats()){
+            SeatEntity seatEntity = seatRepository.findById(idSeat).get();
+            seatEntity.setStatus("BOOKED");
+            seatRepository.save(seatEntity);
+        }
+        messageResponse.setStatus(HttpStatus.CREATED);
+        messageResponse.setMessage("Created");
+        return messageResponse;
     }
 }

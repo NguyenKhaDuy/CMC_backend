@@ -17,7 +17,7 @@ public class CategoryEntity {
     private Long idCategory;
 
     @Column(name = "name_category")
-    private String name_category;
+    private String nameCategory;
 
     @OneToMany(mappedBy = "categoryEntity", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE}, orphanRemoval = true)
     private List<MovieEntity> movieEntities = new ArrayList<>();

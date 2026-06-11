@@ -73,13 +73,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
-        // 1. Ưu tiên Authorization header
         String authHeader = request.getHeader("Authorization");
+
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
-        // 2. Fallback: đọc từ Cookie
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("token".equals(cookie.getName())) {
@@ -87,7 +86,7 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 }
             }
         }
-        System.out.println("JWT ERROR");
+
         return null;
     }
 }

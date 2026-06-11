@@ -15,6 +15,7 @@ import org.example.cmc_backend.Service.DrinkService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -36,15 +37,15 @@ public class DrinkServiceImplement implements DrinkService {
     ModelMapper modelMapper;
 
     @Override
-    public DataPageResponse getAllDrink(Integer pageNo) {
+    public Page<DrinkDTO> getAllDrink(Integer pageNo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
-        DataPageResponse dataPageResponse = new DataPageResponse();
         Page<DrinkEntity> drinkEntities = drinkRepository.findAll(pageable);
         List<DrinkDTO> drinkDTOS = new ArrayList<>();
-        List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
+
         for (DrinkEntity drinkEntity : drinkEntities) {
             DrinkDTO drinkDTO = new DrinkDTO();
             modelMapper.map(drinkEntity, drinkDTO);
+            List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
             for (SizeDrinkEntity sizeDrinkEntity : drinkEntity.getSizeDrinkEntities()) {
                 DrinkSizeDTO drinkSizeDTO = new DrinkSizeDTO();
                 drinkSizeDTO.setIdSize(sizeDrinkEntity.getSizeEntity().getIdSize());
@@ -55,12 +56,7 @@ public class DrinkServiceImplement implements DrinkService {
             drinkDTO.setDrinkSizeDTOS(drinkSizeDTOS);
             drinkDTOS.add(drinkDTO);
         }
-        dataPageResponse.setData(drinkDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(drinkEntities.getTotalElements());
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        return dataPageResponse;
+        return new PageImpl<>(drinkDTOS, drinkEntities.getPageable(), drinkEntities.getTotalElements());
     }
 
     @Override
@@ -68,10 +64,10 @@ public class DrinkServiceImplement implements DrinkService {
         DataResponse dataResponse = new DataResponse();
         List<DrinkEntity> drinkEntities = drinkRepository.findAll();
         List<DrinkDTO> drinkDTOS = new ArrayList<>();
-        List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
         for (DrinkEntity drinkEntity : drinkEntities) {
             DrinkDTO drinkDTO = new DrinkDTO();
             modelMapper.map(drinkEntity, drinkDTO);
+            List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
             for (SizeDrinkEntity sizeDrinkEntity : drinkEntity.getSizeDrinkEntities()) {
                 DrinkSizeDTO drinkSizeDTO = new DrinkSizeDTO();
                 drinkSizeDTO.setIdSize(sizeDrinkEntity.getSizeEntity().getIdSize());
@@ -93,10 +89,10 @@ public class DrinkServiceImplement implements DrinkService {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();
         DrinkDTO drinkDTO = new DrinkDTO();
-        List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
         try{
             DrinkEntity drinkEntity = drinkRepository.findById(idDrink).get();
             modelMapper.map(drinkEntity, drinkDTO);
+            List<DrinkSizeDTO> drinkSizeDTOS = new ArrayList<>();
             for (SizeDrinkEntity sizeDrinkEntity : drinkEntity.getSizeDrinkEntities()) {
                 DrinkSizeDTO drinkSizeDTO = new DrinkSizeDTO();
                 drinkSizeDTO.setIdSize(sizeDrinkEntity.getSizeEntity().getIdSize());

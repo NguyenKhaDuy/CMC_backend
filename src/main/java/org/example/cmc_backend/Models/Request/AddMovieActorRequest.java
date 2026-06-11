@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AddMovieActorRquest {
+public class AddMovieActorRequest {
     private Long idActor;
     private boolean is_main;
 }

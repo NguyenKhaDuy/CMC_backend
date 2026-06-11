@@ -17,6 +17,7 @@ import org.example.cmc_backend.Service.FoodService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -38,15 +39,14 @@ public class FoodServiceImplement implements FoodService {
     ModelMapper modelMapper;
 
     @Override
-    public DataPageResponse getAllFood(Integer pageNo) {
+    public Page<FoodDTO> getAllFood(Integer pageNo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
-        DataPageResponse dataPageResponse = new DataPageResponse();
         Page<FoodEntity> foodEntities = foodRepository.findAll(pageable);
         List<FoodDTO> foodDTOS = new ArrayList<>();
-        List<FoodSizeDTO> foodSizeDTOS = new ArrayList<>();
         for (FoodEntity foodEntity : foodEntities) {
             FoodDTO foodDTO = new FoodDTO();
             modelMapper.map(foodEntity, foodDTO);
+            List<FoodSizeDTO> foodSizeDTOS = new ArrayList<>();
             for (SizeFoodEntity sizeFoodEntity : foodEntity.getSizeFoodEntities()) {
                 FoodSizeDTO foodSizeDTO = new FoodSizeDTO();
                 foodSizeDTO.setIdSize(sizeFoodEntity.getSizeEntity().getIdSize());
@@ -57,12 +57,7 @@ public class FoodServiceImplement implements FoodService {
             foodDTO.setFoodSize(foodSizeDTOS);
             foodDTOS.add(foodDTO);
         }
-        dataPageResponse.setData(foodDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(foodEntities.getTotalElements());
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        return dataPageResponse;
+        return new PageImpl<>(foodDTOS, foodEntities.getPageable(), foodEntities.getTotalElements());
     }
 
     @Override
@@ -70,9 +65,9 @@ public class FoodServiceImplement implements FoodService {
         DataResponse dataResponse = new DataResponse();
         List<FoodEntity> foodEntities = foodRepository.findAll();
         List<FoodDTO> foodDTOS = new ArrayList<>();
-        List<FoodSizeDTO> foodSizeDTOS = new ArrayList<>();
         for (FoodEntity foodEntity : foodEntities) {
             FoodDTO foodDTO = new FoodDTO();
+            List<FoodSizeDTO> foodSizeDTOS = new ArrayList<>();
             modelMapper.map(foodEntity, foodDTO);
             for (SizeFoodEntity sizeFoodEntity : foodEntity.getSizeFoodEntities()) {
                 FoodSizeDTO foodSizeDTO = new FoodSizeDTO();

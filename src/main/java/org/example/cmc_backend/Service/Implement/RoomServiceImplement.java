@@ -53,7 +53,7 @@ public class RoomServiceImplement implements RoomService {
                 movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
                 movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
                 movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-                movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+                movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
                 scheduleDTO.setMovieDTO(movieDTO);
 
                 scheduleDTOS.add(scheduleDTO);
@@ -91,7 +91,7 @@ public class RoomServiceImplement implements RoomService {
                 movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
                 movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
                 movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-                movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+                movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
                 scheduleDTO.setMovieDTO(movieDTO);
 
                 scheduleDTOS.add(scheduleDTO);

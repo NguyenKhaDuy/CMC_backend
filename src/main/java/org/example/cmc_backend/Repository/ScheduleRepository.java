@@ -9,11 +9,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 public interface ScheduleRepository extends JpaRepository<ScheduleEntity, Long> {
     Page<ScheduleEntity> findAllByMovieEntity(MovieEntity movieEntity, Pageable pageable);
+    List<ScheduleEntity> findAllByMovieEntity(MovieEntity movieEntity);
     Page<ScheduleEntity> findAllByRoomEntity(RoomEntity roomEntity, Pageable pageable);
     Page<ScheduleEntity> findAllByDate(LocalDate date, Pageable pageable);
+    List<ScheduleEntity> findAllByDate(LocalDate date);
     ScheduleEntity findByMovieEntityAndIdSchedule(MovieEntity movieEntity, Long idSchedule);
 }

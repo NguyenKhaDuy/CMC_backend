@@ -18,6 +18,7 @@ import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -43,23 +44,26 @@ public class ActorServiceImplement implements ActorService {
     ModelMapper modelMapper;
 
     @Override
-    public DataPageResponse GetAllActor(Integer pageNo) {
-        DataPageResponse dataPageResponse = new DataPageResponse();
+    public Page<ActorDTO> GetAllActor(Integer pageNo) {
         List<ActorDTO> actorDTOS = new ArrayList<>();
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
         Page<ActorEntity> actorEntities = actorRepository.findAll(pageable);
         for (ActorEntity actorEntity : actorEntities) {
             ActorDTO actorDTO = new ActorDTO();
+            List<ActorMovieDTO> actorMovieDTOS = new ArrayList<>();
+            for (ActorMovieEntity actorMovieEntity : actorEntity.getActorMovieEntities()) {
+                ActorMovieDTO actorMovieDTO = new ActorMovieDTO();
+                actorMovieDTO.setIdMovie(actorMovieEntity.getMovieEntity().getIdMovie());
+                actorMovieDTO.setNameMovie(actorMovieEntity.getMovieEntity().getNameMovie());
+                actorMovieDTO.set_main(actorMovieEntity.isMain());
+                actorMovieDTOS.add(actorMovieDTO);
+            }
             modelMapper.map(actorEntity, actorDTO);
             actorDTO.setImage(ConvertByteToBase64.toBase64(actorEntity.getImage()));
+            actorDTO.setActorMovieDTOS(actorMovieDTOS);
             actorDTOS.add(actorDTO);
         }
-        dataPageResponse.setData(actorDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(actorEntities.getTotalElements());
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        return dataPageResponse;
+        return new PageImpl<>(actorDTOS, actorEntities.getPageable(), actorEntities.getTotalElements());
     }
 
     @Override
@@ -68,6 +72,7 @@ public class ActorServiceImplement implements ActorService {
         DataResponse dataResponse = new DataResponse();
         MovieEntity movieEntity = null;
         List<ActorDTO> actorDTOS = new ArrayList<>();
+
         try{
             movieEntity = movieRepository.findById(movieId).get();
         }catch (NoSuchElementException e)
@@ -88,6 +93,19 @@ public class ActorServiceImplement implements ActorService {
         for (ActorMovieEntity actorMovieEntity : actorMovieEntities) {
             ActorDTO actorDTO = new ActorDTO();
             ActorEntity actorEntity = actorMovieEntity.getActorEntity();
+
+            //lấy ra danh sách phim mà diễn viên tham gia
+            List<ActorMovieDTO> actorMovieDTOS = new ArrayList<>();
+            List<ActorMovieEntity> actorMovies = actorMovieRepository.findByActorEntity(actorEntity);
+            for (ActorMovieEntity actorMovie : actorMovies) {
+                ActorMovieDTO actorMovieDTO = new ActorMovieDTO();
+                actorMovieDTO.setIdMovie(actorMovie.getMovieEntity().getIdMovie());
+                actorMovieDTO.setNameMovie(actorMovie.getMovieEntity().getNameMovie());
+                actorMovieDTO.set_main(actorMovieEntity.isMain());
+                actorMovieDTOS.add(actorMovieDTO);
+                actorDTO.setActorMovieDTOS(actorMovieDTOS);
+            }
+
             modelMapper.map(actorEntity, actorDTO);
             actorDTO.setImage(ConvertByteToBase64.toBase64(actorEntity.getImage()));
             actorDTOS.add(actorDTO);
@@ -111,27 +129,7 @@ public class ActorServiceImplement implements ActorService {
             messageResponse.setMessage("Can't add actor");
             return messageResponse;
         }
-        if (actorRequest.getActorMovieRequests() != null) {
-            for (ActorMovieRequest actorMovieRequest : actorRequest.getActorMovieRequests()) {
-                try {
-                    MovieEntity movieEntity = movieRepository.findById(actorMovieRequest.getId_movie()).get();
-                    ActorMovieEntity actorMovieEntity = new ActorMovieEntity();
-                    actorMovieEntity.setMovieEntity(movieEntity);
-                    actorMovieEntity.setActorEntity(actorEntity);
-                    actorMovieEntity.setMain(actorMovieRequest.is_main());
-                    actorEntity.getActorMovieEntities().add(actorMovieEntity);
-                }catch (NoSuchElementException e){
-                    messageResponse.setStatus(HttpStatus.NOT_FOUND);
-                    messageResponse.setMessage("Can't find movie");
-                    return messageResponse;
-                }
-            }
-        }else {
-            actorEntity.setActorMovieEntities(null);
-        }
-
         actorRepository.save(actorEntity);
-
         messageResponse.setStatus(HttpStatus.OK);
         messageResponse.setMessage("Success");
         return messageResponse;
@@ -151,21 +149,6 @@ public class ActorServiceImplement implements ActorService {
                 messageResponse.setMessage("Can't update actor");
                 return messageResponse;
             }
-            for (ActorMovieRequest actorMovieRequest : actorRequest.getActorMovieRequests()) {
-                try{
-                    MovieEntity movieEntity = movieRepository.findById(actorMovieRequest.getId_movie()).get();
-                    actorEntity.getActorMovieEntities().clear();
-                    ActorMovieEntity actorMovieEntity = new ActorMovieEntity();
-                    actorMovieEntity.setMovieEntity(movieEntity);
-                    actorMovieEntity.setActorEntity(actorEntity);
-                    actorMovieEntity.setMain(actorMovieRequest.is_main());
-                    actorEntity.getActorMovieEntities().add(actorMovieEntity);
-                }catch (NoSuchElementException e){
-                    messageResponse.setStatus(HttpStatus.NOT_FOUND);
-                    messageResponse.setMessage("Can't find movie");
-                    return messageResponse;
-                }
-            }
             actorRepository.save(actorEntity);
             messageResponse.setStatus(HttpStatus.OK);
             messageResponse.setMessage("Success");
@@ -182,6 +165,7 @@ public class ActorServiceImplement implements ActorService {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();
         ActorDTO actorDTO = new ActorDTO();
+        List<ActorMovieDTO> actorMovieDTOS = new ArrayList<>();
         try{
             ActorEntity actorEntity = actorRepository.findById(actorId).get();
             modelMapper.map(actorEntity, actorDTO);
@@ -191,7 +175,8 @@ public class ActorServiceImplement implements ActorService {
                 actorMovieDTO.setNameMovie(actorMovieEntity.getMovieEntity().getNameMovie());
                 actorMovieDTO.setIdMovie(actorMovieEntity.getMovieEntity().getIdMovie());
                 actorMovieDTO.set_main(actorMovieEntity.isMain());
-                actorDTO.getActorMovieDTOS().add(actorMovieDTO);
+                actorMovieDTOS.add(actorMovieDTO);
+                actorDTO.setActorMovieDTOS(actorMovieDTOS);
             }
             dataResponse.setData(actorDTO);
             dataResponse.setMessage("Success");

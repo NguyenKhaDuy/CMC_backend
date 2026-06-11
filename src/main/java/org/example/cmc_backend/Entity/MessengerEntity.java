@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @Table(name = "messenger")
 public class MessengerEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idMessenger;
+    @Column(name = "id_messenger", nullable = false)
+    private String idMessenger;
 
     @Column(name = "sender_type")
     private String senderType;
@@ -29,7 +29,7 @@ public class MessengerEntity {
     private String extractedData;
 
     @Column(name = "confident_score")
-    private Long confidentScore;
+    private Integer confidentScore;
 
     @Column(name = "created_at")
     @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
