@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class AiPromptServiceImplement implements AiPromptService {
 
-    public static final String EXTERNAL_SOURCE_NOTE = "Lưu ý: Thông tin này không thuộc dữ liệu chính thức của website Greeny.";
+    public static final String EXTERNAL_SOURCE_NOTE = "Lưu ý: Thông tin này không thuộc dữ liệu chính thức của website cmc.";
 
     @Override
     public String buildSystemPrompt(String customPrompt) {

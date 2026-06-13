@@ -31,7 +31,7 @@ import java.util.List;
 
 @Service
 @Primary
-@ConditionalOnProperty(prefix = "greeny.ai.spring", name = "enabled", havingValue = "true")
+@ConditionalOnProperty(prefix = "cmc.ai.spring", name = "enabled", havingValue = "true")
 public class SpringAiProviderServiceImplement implements AiProviderService {
     private final AiProviderRuntime runtime;
     private final ToolCallingManager toolCallingManager;

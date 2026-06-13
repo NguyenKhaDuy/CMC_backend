@@ -32,6 +32,7 @@ public class AiChatApi {
             @RequestBody ChatRequest request
     ) {
         UserEntity user = userRepository.findById("UUnC91RkHXK").get();
+        System.out.println("Testttttttt" + request);
         return aiChatService.chat(user, request);
     }
 

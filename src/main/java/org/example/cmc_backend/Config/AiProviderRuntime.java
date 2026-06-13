@@ -72,8 +72,8 @@ public class AiProviderRuntime {
 
         if (!hasConfiguredProvider) {
             throw new AiProviderConfigurationException(
-                    "Chua cau hinh API key AI. Hay dien greeny.ai.gemini-api-key "
-                            + "hoac greeny.ai.chatgpt-api-key trong application.properties."
+                    "Chua cau hinh API key AI. Hay dien cmc.ai.gemini-api-key "
+                            + "hoac cmc.ai.chatgpt-api-key trong application.properties."
             );
         }
         throw new IllegalStateException("AI dang tam thoi khong phan hoi, vui long thu lai sau");
