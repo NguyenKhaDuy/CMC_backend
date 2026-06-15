@@ -14,22 +14,22 @@ import java.time.LocalTime;
 @Table(name = "ai_chat")
 public class AIChatEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idSession;
+    @Column(name = "ID_SESSION", nullable = false)
+    private String idSession;
 
     @Column(name = "current_step")
     private String currentStep;
 
     @Column(name = "status")
-    private String status;
+    private Integer status;
 
     @Column(name = "started_at")
-    @DateTimeFormat(pattern = "HH:mm:ss")
-    private LocalTime startedAt;
+    @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime startedAt;
 
     @Column(name = "ended_at")
-    @DateTimeFormat(pattern = "HH:mm:ss")
-    private LocalTime endedAt;
+    @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime endedAt;
 
     @Column(name = "created_at")
     @DateTimeFormat(pattern = "dd-MM-yyyy HH:mm:ss")

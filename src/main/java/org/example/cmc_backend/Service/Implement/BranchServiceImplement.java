@@ -15,6 +15,7 @@ import org.example.cmc_backend.Service.BranchService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -34,15 +35,14 @@ public class BranchServiceImplement implements BranchService {
     ModelMapper modelMapper;
 
     @Override
-    public DataPageResponse getAllBranches(Integer pageNo) {
+    public Page<BranchDTO> getAllBranches(Integer pageNo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
         Page<BranchEntity> branchEntities = branchRepository.findAll(pageable);
-        DataPageResponse dataPageResponse = new DataPageResponse();
         List<BranchDTO> branchDTOS = new ArrayList<>();
-        List<RoomDTO> roomDTOS = new ArrayList<>();
         for (BranchEntity branchEntity : branchEntities) {
             BranchDTO branchDTO = new BranchDTO();
             modelMapper.map(branchEntity, branchDTO);
+            List<RoomDTO> roomDTOS = new ArrayList<>();
             for (RoomEntity roomEntity : branchEntity.getRoomEntities()) {
                 RoomDTO roomDTO = new RoomDTO();
                 modelMapper.map(roomEntity, roomDTO);
@@ -51,12 +51,7 @@ public class BranchServiceImplement implements BranchService {
             branchDTO.setRoomDTOS(roomDTOS);
             branchDTOS.add(branchDTO);
         }
-        dataPageResponse.setData(branchDTOS);
-        dataPageResponse.setTotal_page(branchEntities.getTotalElements());
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        return dataPageResponse;
+        return new PageImpl<>(branchDTOS, branchEntities.getPageable(), branchEntities.getTotalElements());
     }
 
     @Override
@@ -64,10 +59,11 @@ public class BranchServiceImplement implements BranchService {
         DataResponse dataResponse = new DataResponse();
         List<BranchDTO> branchDTOS = new ArrayList<>();
         List<BranchEntity> branchEntities = branchRepository.findAll();
-        List<RoomDTO> roomDTOS = new ArrayList<>();
+
         for (BranchEntity branchEntity : branchEntities) {
             BranchDTO branchDTO = new BranchDTO();
             modelMapper.map(branchEntity, branchDTO);
+            List<RoomDTO> roomDTOS = new ArrayList<>();
             for (RoomEntity roomEntity : branchEntity.getRoomEntities()) {
                 RoomDTO roomDTO = new RoomDTO();
                 modelMapper.map(roomEntity, roomDTO);

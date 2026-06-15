@@ -1,14 +1,17 @@
 package org.example.cmc_backend.Config;
 
 
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
 import org.example.cmc_backend.JwtTokenFilter.JwtTokenFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -22,6 +25,7 @@ import java.util.List;
 @EnableWebSecurity
 @EnableWebMvc
 @RequiredArgsConstructor
+@EnableMethodSecurity
 public class WebSecurityConfig {
     private final JwtTokenFilter jwtTokenFilter;
     @Bean
@@ -31,7 +35,13 @@ public class WebSecurityConfig {
                 .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
                 .addFilterBefore(jwtTokenFilter, UsernamePasswordAuthenticationFilter.class)
+
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
                         .anyRequest().permitAll()
                 );
 
@@ -53,6 +63,21 @@ public class WebSecurityConfig {
         return source;
     }
 
+    private static final String SECURITY_SCHEME_NAME = "bearerAuth";
+
+    @Bean
+    public OpenAPI greenyOpenApi() {
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList(SECURITY_SCHEME_NAME))
+                .components(new Components().addSecuritySchemes(
+                        SECURITY_SCHEME_NAME,
+                        new SecurityScheme()
+                                .name(SECURITY_SCHEME_NAME)
+                                .type(SecurityScheme.Type.HTTP)
+                                .scheme("bearer")
+                                .bearerFormat("Token")
+                ));
+    }
 
 
 }

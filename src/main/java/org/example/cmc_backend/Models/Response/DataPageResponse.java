@@ -8,7 +8,7 @@ import org.springframework.http.HttpStatus;
 @Setter
 public class DataPageResponse <T>{
     private T data;
-    private Long total_page;
+    private Integer total_page;
     private Integer current_page;
     private String message;
     private HttpStatus status;

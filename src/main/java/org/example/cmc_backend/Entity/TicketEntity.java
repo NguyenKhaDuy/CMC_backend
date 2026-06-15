@@ -16,6 +16,9 @@ public class TicketEntity {
     @Column(name = "id_ticket")
     private String idTicket;
 
+    @Column(name = "price_ticket")
+    private Double priceTicket;
+
     @ManyToOne
     @JoinColumn(name = "id_seat")
     private SeatEntity seatEntity;

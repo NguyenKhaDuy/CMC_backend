@@ -37,8 +37,9 @@ public class CategoryServiceImplement implements CategoryService {
     }
 
     @Override
-    public DataResponse getCategoryById(Long id_category) {
+    public Object getCategoryById(Long id_category) {
         DataResponse dataResponse = new DataResponse();
+        MessageResponse messageResponse = new MessageResponse();
         try {
             CategoryEntity categoryEntity = categoryRepository.findById(id_category).get();
             CategoryDTO categoryDTO = new CategoryDTO();
@@ -47,9 +48,9 @@ public class CategoryServiceImplement implements CategoryService {
             dataResponse.setStatus(HttpStatus.OK);
             dataResponse.setMessage("Success");
         }catch (NoSuchElementException e) {
-            dataResponse.setMessage("Category not found");
-            dataResponse.setData(null);
-            dataResponse.setStatus(HttpStatus.NOT_FOUND);
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            messageResponse.setMessage("Category not found");
+            return messageResponse;
         }
         return dataResponse;
     }
@@ -58,7 +59,7 @@ public class CategoryServiceImplement implements CategoryService {
     public MessageResponse addCategory(String category_name) {
         MessageResponse messageResponse = new MessageResponse();
         CategoryEntity categoryEntity = new CategoryEntity();
-        categoryEntity.setName_category(category_name);
+        categoryEntity.setNameCategory(category_name);
         categoryRepository.save(categoryEntity);
         messageResponse.setMessage("Success");
         messageResponse.setStatus(HttpStatus.OK);
@@ -85,7 +86,7 @@ public class CategoryServiceImplement implements CategoryService {
         MessageResponse messageResponse = new MessageResponse();
         try {
             CategoryEntity categoryEntity = categoryRepository.findById(updateCategoryRequest.getId_category()).get();
-            categoryEntity.setName_category(updateCategoryRequest.getName_category());
+            categoryEntity.setNameCategory(updateCategoryRequest.getName_category());
             categoryRepository.save(categoryEntity);
             messageResponse.setMessage("Success");
             messageResponse.setStatus(HttpStatus.OK);

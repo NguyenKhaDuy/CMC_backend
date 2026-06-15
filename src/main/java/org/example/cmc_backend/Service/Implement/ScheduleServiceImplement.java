@@ -21,6 +21,7 @@ import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -44,18 +45,14 @@ public class ScheduleServiceImplement implements ScheduleService {
     RoomRepository roomRepository;
 
     @Override
-    public Object getAllSchedulesByMovie(String idMovie, Integer pageNo) {
-        MessageResponse messageResponse = new MessageResponse();
-        DataPageResponse dataPageResponse = new DataPageResponse();
+    public Page<ScheduleDTO> getAllSchedulesByMovie(String idMovie, Integer pageNo) {
         List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
         MovieEntity movieEntity = null;
         try {
             movieEntity = movieRepository.findById(idMovie).get();
         } catch (NoSuchElementException ex) {
-            messageResponse.setMessage("Cannot find movie");
-            messageResponse.setStatus(HttpStatus.OK);
-            return messageResponse;
+            return null;
         }
         Page<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByMovieEntity(movieEntity, pageable);
         for (ScheduleEntity scheduleEntity : scheduleEntities) {
@@ -67,7 +64,7 @@ public class ScheduleServiceImplement implements ScheduleService {
             movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
             movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
             movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
             scheduleDTO.setMovieDTO(movieDTO);
 
             RoomDTO roomDTO = new RoomDTO();
@@ -79,27 +76,54 @@ public class ScheduleServiceImplement implements ScheduleService {
 
             scheduleDTOS.add(scheduleDTO);
         }
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        dataPageResponse.setData(scheduleDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(scheduleEntities.getTotalElements());
-        return dataPageResponse;
+
+        return new PageImpl<>(scheduleDTOS, scheduleEntities.getPageable(), scheduleEntities.getTotalElements());
     }
 
     @Override
-    public Object getAllSchedulesByRoom(Long idRoom, Integer pageNo) {
-        MessageResponse messageResponse = new MessageResponse();
-        DataPageResponse dataPageResponse = new DataPageResponse();
+    public List<ScheduleDTO> getAllSchedulesByMovie(String idMovie) {
+        List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+        MovieEntity movieEntity = null;
+        try {
+            movieEntity = movieRepository.findById(idMovie).get();
+        } catch (NoSuchElementException ex) {
+            return null;
+        }
+        List<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByMovieEntity(movieEntity);
+        for (ScheduleEntity scheduleEntity : scheduleEntities) {
+            ScheduleDTO scheduleDTO = new ScheduleDTO();
+            modelMapper.map(scheduleEntity, scheduleDTO);
+
+            MovieDTO movieDTO = new MovieDTO();
+            modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+            movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+            movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+            movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+            scheduleDTO.setMovieDTO(movieDTO);
+
+            RoomDTO roomDTO = new RoomDTO();
+            modelMapper.map(scheduleEntity.getRoomEntity(), roomDTO);
+            BranchDTO branchDTO = new BranchDTO();
+            modelMapper.map(scheduleEntity.getRoomEntity().getBranchEntity(), branchDTO);
+            roomDTO.setBranchDTO(branchDTO);
+            scheduleDTO.setRoomDTO(roomDTO);
+
+            scheduleDTOS.add(scheduleDTO);
+        }
+
+        return scheduleDTOS;
+    }
+
+    @Override
+    public Page<ScheduleDTO> getAllSchedulesByRoom(Long idRoom, Integer pageNo) {
         List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
         RoomEntity roomEntity = null;
         try {
             roomEntity = roomRepository.findById(idRoom).get();
         } catch (NoSuchElementException ex) {
-            messageResponse.setMessage("Cannot find room");
-            messageResponse.setStatus(HttpStatus.OK);
-            return messageResponse;
+            return null;
         }
         Page<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByRoomEntity(roomEntity, pageable);
         for (ScheduleEntity scheduleEntity : scheduleEntities) {
@@ -111,7 +135,7 @@ public class ScheduleServiceImplement implements ScheduleService {
             movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
             movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
             movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
             scheduleDTO.setMovieDTO(movieDTO);
 
             RoomDTO roomDTO = new RoomDTO();
@@ -123,17 +147,11 @@ public class ScheduleServiceImplement implements ScheduleService {
 
             scheduleDTOS.add(scheduleDTO);
         }
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        dataPageResponse.setData(scheduleDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(scheduleEntities.getTotalElements());
-        return dataPageResponse;
+        return new PageImpl<>(scheduleDTOS, scheduleEntities.getPageable(), scheduleEntities.getTotalElements());
     }
 
     @Override
-    public Object getAllSchedulesByDate(LocalDate date, Integer pageNo) {
-        DataPageResponse dataPageResponse = new DataPageResponse();
+    public Page<ScheduleDTO> getAllSchedulesByDate(LocalDate date, Integer pageNo) {
         List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
         Page<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByDate(date, pageable);
@@ -146,7 +164,7 @@ public class ScheduleServiceImplement implements ScheduleService {
             movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
             movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
             movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
             scheduleDTO.setMovieDTO(movieDTO);
 
             RoomDTO roomDTO = new RoomDTO();
@@ -158,12 +176,35 @@ public class ScheduleServiceImplement implements ScheduleService {
 
             scheduleDTOS.add(scheduleDTO);
         }
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setStatus(HttpStatus.OK);
-        dataPageResponse.setData(scheduleDTOS);
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(scheduleEntities.getTotalElements());
-        return dataPageResponse;
+        return new PageImpl<>(scheduleDTOS, scheduleEntities.getPageable(), scheduleEntities.getTotalElements());
+    }
+
+    @Override
+    public List<ScheduleDTO> getAllSchedulesByDate(LocalDate date) {
+        List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+        List<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByDate(date);
+        for (ScheduleEntity scheduleEntity : scheduleEntities) {
+            ScheduleDTO scheduleDTO = new ScheduleDTO();
+            modelMapper.map(scheduleEntity, scheduleDTO);
+
+            MovieDTO movieDTO = new MovieDTO();
+            modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+            movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+            movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+            movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+            scheduleDTO.setMovieDTO(movieDTO);
+
+            RoomDTO roomDTO = new RoomDTO();
+            modelMapper.map(scheduleEntity.getRoomEntity(), roomDTO);
+            BranchDTO branchDTO = new BranchDTO();
+            modelMapper.map(scheduleEntity.getRoomEntity().getBranchEntity(), branchDTO);
+            roomDTO.setBranchDTO(branchDTO);
+            scheduleDTO.setRoomDTO(roomDTO);
+
+            scheduleDTOS.add(scheduleDTO);
+        }
+        return scheduleDTOS;
     }
 
     @Override
@@ -180,7 +221,7 @@ public class ScheduleServiceImplement implements ScheduleService {
             movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
             movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
             movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
-            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getName_category());
+            movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
             scheduleDTO.setMovieDTO(movieDTO);
 
             RoomDTO roomDTO = new RoomDTO();

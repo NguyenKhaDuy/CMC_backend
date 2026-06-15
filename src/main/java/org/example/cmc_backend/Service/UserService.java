@@ -1,14 +1,18 @@
 package org.example.cmc_backend.Service;
 
-import org.example.cmc_backend.Models.Request.LoginRequest;
-import org.example.cmc_backend.Models.Request.RegisterRequest;
-import org.example.cmc_backend.Models.Request.UpdateAvatarRequest;
+import org.example.cmc_backend.Entity.UserEntity;
+import org.example.cmc_backend.Models.Request.*;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.springframework.stereotype.Service;
 
 @Service
 public interface UserService {
-    public MessageResponse Register(RegisterRequest registerRequest);
-    public MessageResponse UpdateAvatar(UpdateAvatarRequest updateAvatarRequest);
-    public Object Login(LoginRequest loginRequest);
+    MessageResponse Register(RegisterRequest registerRequest);
+    MessageResponse UpdateAvatar(UpdateAvatarRequest updateAvatarRequest);
+    Object Login(LoginRequest loginRequest);
+    MessageResponse updateInformation(UpdateUserRequest updateUserRequest);
+    MessageResponse updateEmailUser(UpdateEmailRequest updateEmailRequest);
+    MessageResponse updatePassword(UpdatePasswordRequest updatePasswordRequest);
+    MessageResponse forgotPassword(ForgotPasswordRequest forgotPasswordRequest);
+    UserEntity getUserByEmail(String email);
 }

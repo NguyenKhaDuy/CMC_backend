@@ -56,9 +56,6 @@ public class UserEntity implements UserDetails {
     private List<BillEntity> billEntities = new ArrayList<>();
 
     @OneToMany(mappedBy = "userEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
-    private List<AIConsultationsEntity> aiConsultationsEntities = new ArrayList<>();
-
-    @OneToMany(mappedBy = "userEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<MessengerEntity> messengerEntities = new ArrayList<>();
 
     @OneToMany(mappedBy = "userEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)

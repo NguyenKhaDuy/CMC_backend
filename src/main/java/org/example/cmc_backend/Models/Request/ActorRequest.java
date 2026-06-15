@@ -14,5 +14,4 @@ public class ActorRequest {
     private MultipartFile image;
     private String name;
     private String description;
-    private List<ActorMovieRequest> actorMovieRequests;
 }

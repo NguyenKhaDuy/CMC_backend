@@ -10,10 +10,10 @@ import java.util.List;
 
 @Service
 public interface SeatService {
-    DataResponse getAllSeats();
-    Object getAllSeatsByRoom(Long idRoom);
-    Object getSeatById(Long idSeat);
-    Object addSeat(SeatRequest seatRequest);
-    Object deleteSeat(Long idSeat);
-    Object updateSeat(SeatRequest seatRequest);
+    DataResponse getAllSeats(); //all
+    Object getAllSeatsByRoom(Long idRoom); //admin
+    Object getSeatById(Long idSeat); //admin
+    Object addSeat(SeatRequest seatRequest); //admin
+    Object deleteSeat(Long idSeat); //admin
+    Object updateSeat(SeatRequest seatRequest); //admin
 }

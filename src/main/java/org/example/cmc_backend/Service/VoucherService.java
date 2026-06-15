@@ -12,9 +12,9 @@ import java.util.List;
 
 @Service
 public interface VoucherService {
-    DataPageResponse GetAllVouchers(Integer pageNo);
-    DataResponse GetAllVouchers();
-    Object GetVoucherById(Long idVoucher);
+    Page<VoucherDTO> GetAllVouchers(Integer pageNo); //admin
+    DataResponse GetAllVouchers(); //all
+    Object GetVoucherById(Long idVoucher); //all
     MessageResponse AddVoucher(VoucherRequest voucherRequest);
     MessageResponse UpdateVoucher(VoucherRequest voucherRequest);
     MessageResponse DeleteVoucher(Long idVoucher);

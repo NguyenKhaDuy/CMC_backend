@@ -1,7 +1,5 @@
 package org.example.cmc_backend.Models.Request;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Lob;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -26,6 +24,5 @@ public class MovieRequest {
     private MultipartFile smallImage;
     private MultipartFile largeImage;
     private String trailer;
-    private List<AddMovieActorRquest> addMovieActorRquests;
     private Long idCategory;
 }

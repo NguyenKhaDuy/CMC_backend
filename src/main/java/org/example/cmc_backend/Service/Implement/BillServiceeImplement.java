@@ -1,18 +1,24 @@
 package org.example.cmc_backend.Service.Implement;
 
+import org.example.cmc_backend.Config.QRCodeGenerator;
 import org.example.cmc_backend.Entity.*;
 import org.example.cmc_backend.Models.DTO.*;
+import org.example.cmc_backend.Models.Request.BookingDrinkRequest;
+import org.example.cmc_backend.Models.Request.BookingFoodRequest;
+import org.example.cmc_backend.Models.Request.BookingRequest;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
-import org.example.cmc_backend.Repository.BillRepository;
-import org.example.cmc_backend.Repository.UserRepository;
+import org.example.cmc_backend.Repository.*;
 import org.example.cmc_backend.Service.BillService;
 import org.example.cmc_backend.Utils.ConvertByteToBase64;
+import org.example.cmc_backend.Utils.RandomIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,6 +31,29 @@ public class BillServiceeImplement implements BillService {
     UserRepository userRepository;
     @Autowired
     ModelMapper modelMapper;
+    @Autowired
+    SizeRepository sizeRepository;
+    @Autowired
+    DrinkRepository drinkRepository;
+    @Autowired
+    FoodRepository foodRepository;
+    @Autowired
+    BranchRepository branchRepository;
+    @Autowired
+    MovieRepository movieRepository;
+    @Autowired
+    ScheduleRepository scheduleRepository;
+    @Autowired
+    VoucherRepository voucherRepository;
+    @Autowired
+    SeatRepository seatRepository;
+    @Autowired
+    TicketRepository ticketRepository;
+    @Autowired
+    SizeDrinkRepository sizeDrinkRepository;
+    @Autowired
+    SizeFoodRepository sizeFoodRepository;
+
 
     @Override
     public Object getAllBillsByUser(String idUser) {
@@ -106,5 +135,134 @@ public class BillServiceeImplement implements BillService {
         dataResponse.setMessage("Success");
         dataResponse.setStatus(HttpStatus.OK);
         return dataResponse;
+    }
+
+    @Override
+    public MessageResponse booking(BookingRequest bookingRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        BranchEntity branchEntity = null;
+        MovieEntity movieEntity = null;
+        DrinkEntity drinkEntity = null;
+        FoodEntity foodEntity = null;
+        SizeEntity sizeEntity = null;
+        UserEntity userEntity = null;
+        ScheduleEntity scheduleEntity = null;
+        BillEntity billEntity = new BillEntity();
+        VoucherEntity voucherEntity = null;
+        Long totalPriceTicket = 0L;
+        if (bookingRequest.getVoucherCode() != null) {
+            try{
+                voucherEntity = voucherRepository.findByCode(bookingRequest.getVoucherCode());
+                if (LocalDate.now().isBefore(voucherEntity.getExpiration())){
+                    billEntity.setVoucherEntity(voucherEntity);
+                }else{
+                    billEntity.setVoucherEntity(null);
+                }
+            }catch (NoSuchElementException ex){
+                messageResponse.setStatus(HttpStatus.NOT_FOUND);
+                messageResponse.setMessage("Voucher Not Found");
+                return messageResponse;
+            }
+        }else {
+            billEntity.setVoucherEntity(null);
+        }
+
+        try {
+            userEntity = userRepository.findById(bookingRequest.getIdUser()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found user");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        try{
+            branchEntity = branchRepository.findById(bookingRequest.getIdBranch()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found branch");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        String idBill = RandomIdUtils.generateRandomId("B", 10);
+        billEntity.setUserEntity(userEntity);
+        billEntity.setBranchEntity(branchEntity);
+        billEntity.setCreatedAt(LocalDateTime.now());
+        billEntity.setTotalAmount(bookingRequest.getTotalAmount());
+        billEntity.setIdBill(idBill);
+        try {
+            billEntity.setQr(QRCodeGenerator.generateQRCode(idBill));
+        } catch (Exception e) {
+            messageResponse.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+            messageResponse.setMessage("Can not create QR Code");
+            return messageResponse;
+        }
+
+        try{
+            movieEntity = movieRepository.findById(bookingRequest.getIdMovie()).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found movie");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+
+        List<TicketEntity> ticketEntities = new ArrayList<>();
+        try{
+            scheduleEntity = scheduleRepository.findByMovieEntityAndIdSchedule(movieEntity, bookingRequest.getIdSchedule());
+            for (Long idSeat : bookingRequest.getIdSeats()){
+                SeatEntity seatEntity = seatRepository.findById(idSeat).get();
+                //tính tổng giá tiền ghế
+//                totalPriceTicket = (long) (seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
+                TicketEntity ticketEntity = new TicketEntity();
+                ticketEntity.setSeatEntity(seatEntity);
+                ticketEntity.setBillEntity(billEntity);
+                ticketEntity.setPriceTicket(seatEntity.getSeatTypeEntity().getPriceMultiplier() * scheduleEntity.getBasePrice());
+                ticketEntity.setIdTicket(RandomIdUtils.generateRandomId("T", 10));
+                ticketEntities.add(ticketEntity);
+            }
+            billEntity.setTicketEntities(ticketEntities);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Can not found schedule");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+
+        List<BillDrinkDetailEntity> billDrinkDetailEntities = new ArrayList<>();
+        if (!bookingRequest.getBookingDrinkRequests().isEmpty()){
+            for (BookingDrinkRequest bookingDrinkRequest : bookingRequest.getBookingDrinkRequests()) {
+                drinkEntity = drinkRepository.findById(bookingDrinkRequest.getIdDrink()).get();
+                sizeEntity = sizeRepository.findById(bookingDrinkRequest.getIdSize()).get();
+                SizeDrinkEntity sizeDrinkEntity = sizeDrinkRepository.findByDrinkEntityAndSizeEntity(drinkEntity, sizeEntity);
+                BillDrinkDetailEntity billDrinkDetailEntity = new BillDrinkDetailEntity();
+                billDrinkDetailEntity.setQuality(bookingDrinkRequest.getQuality());
+                billDrinkDetailEntity.setSizeDrinkEntity(sizeDrinkEntity);
+                billDrinkDetailEntity.setBillEntity(billEntity);
+                billDrinkDetailEntity.setTotal(sizeDrinkEntity.getPrice() * bookingDrinkRequest.getQuality());
+                billDrinkDetailEntities.add(billDrinkDetailEntity);
+            }
+        }
+        billEntity.setBillDrinkDetailEntities(billDrinkDetailEntities);
+
+        List<BillFoodDetailEntity> billFoodDetailEntities = new ArrayList<>();
+        if(!bookingRequest.getBookingFoodRequests().isEmpty()){
+            for (BookingFoodRequest bookingFoodRequest : bookingRequest.getBookingFoodRequests()) {
+                foodEntity = foodRepository.findById(bookingFoodRequest.getIdFood()).get();
+                sizeEntity = sizeRepository.findById(bookingFoodRequest.getIdSize()).get();
+                SizeFoodEntity sizeFoodEntity = sizeFoodRepository.findByFoodEntityAndSizeEntity(foodEntity, sizeEntity);
+                BillFoodDetailEntity billFoodDetailEntity = new BillFoodDetailEntity();
+                billFoodDetailEntity.setQuality(bookingFoodRequest.getQuality());
+                billFoodDetailEntity.setSizeFoodEntity(sizeFoodEntity);
+                billFoodDetailEntity.setBillEntity(billEntity);
+                billFoodDetailEntity.setTotal(sizeFoodEntity.getPrice() * bookingFoodRequest.getQuality());
+                billFoodDetailEntities.add(billFoodDetailEntity);
+            }
+        }
+        billEntity.setBillFoodDetailEntities(billFoodDetailEntities);
+        billRepository.save(billEntity);
+        for (Long idSeat : bookingRequest.getIdSeats()){
+            SeatEntity seatEntity = seatRepository.findById(idSeat).get();
+            seatEntity.setStatus("BOOKED");
+            seatRepository.save(seatEntity);
+        }
+        messageResponse.setStatus(HttpStatus.CREATED);
+        messageResponse.setMessage("Created");
+        return messageResponse;
     }
 }

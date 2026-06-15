@@ -12,6 +12,7 @@ import org.example.cmc_backend.Service.VoucherService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -30,9 +31,8 @@ public class VoucherServiceImplement implements VoucherService {
     ModelMapper modelMapper;
 
     @Override
-    public DataPageResponse GetAllVouchers(Integer pageNo) {
+    public Page<VoucherDTO> GetAllVouchers(Integer pageNo) {
         Pageable pageable = PageRequest.of(pageNo - 1, 10);
-        DataPageResponse dataPageResponse = new DataPageResponse();
         Page<VoucherEntity> voucherEntities = voucherRepository.findAll(pageable);
         List<VoucherDTO> voucherDTOS = new ArrayList<>();
         for (VoucherEntity voucherEntity : voucherEntities) {
@@ -40,12 +40,7 @@ public class VoucherServiceImplement implements VoucherService {
             modelMapper.map(voucherEntity, voucherDTO);
             voucherDTOS.add(voucherDTO);
         }
-        dataPageResponse.setData(voucherDTOS);
-        dataPageResponse.setStatus(HttpStatus.OK);
-        dataPageResponse.setMessage("Success");
-        dataPageResponse.setCurrent_page(pageNo);
-        dataPageResponse.setTotal_page(voucherEntities.getTotalElements());
-        return dataPageResponse;
+        return new PageImpl<>(voucherDTOS, voucherEntities.getPageable(), voucherEntities.getTotalElements());
     }
 
     @Override

@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Getter
@@ -26,10 +27,10 @@ public class AISettingEntity {
     private String systemPrompt;
 
     @Column(name = "temperature")
-    private String temperature;
+    private BigDecimal temperature;
 
     @Column(name = "max_token")
-    private String maxToken;
+    private Integer maxToken;
 
     @Column(name = "is_active")
     private Long isActive;

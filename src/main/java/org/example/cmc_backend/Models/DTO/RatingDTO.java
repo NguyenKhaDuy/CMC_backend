@@ -1,6 +1,5 @@
 package org.example.cmc_backend.Models.DTO;
 
-import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -9,7 +8,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-public class RantingDTO {
+public class RatingDTO {
     private Long idRating;
     private Integer star;
     private String comment;

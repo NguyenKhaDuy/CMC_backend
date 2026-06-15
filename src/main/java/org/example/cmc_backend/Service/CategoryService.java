@@ -10,9 +10,9 @@ import java.util.List;
 
 @Service
 public interface CategoryService {
-    List<CategoryDTO> getAllCategories();
-    DataResponse getCategoryById(Long id_category);
-    MessageResponse addCategory(String category_name);
-    MessageResponse deleteCategoryById(Long id_category);
-    MessageResponse updateCategory(UpdateCategoryRequest updateCategoryRequest);
+    List<CategoryDTO> getAllCategories(); //all
+    Object getCategoryById(Long id_category); //admin
+    MessageResponse addCategory(String category_name); //admin
+    MessageResponse deleteCategoryById(Long id_category); //admin
+    MessageResponse updateCategory(UpdateCategoryRequest updateCategoryRequest); //admin
 }
