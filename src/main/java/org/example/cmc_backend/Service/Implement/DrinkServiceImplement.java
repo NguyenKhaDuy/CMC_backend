@@ -159,11 +159,18 @@ public class DrinkServiceImplement implements DrinkService {
         MessageResponse messageResponse = new MessageResponse();
         SizeEntity sizeEntity = null;
         DrinkEntity drinkEntity = null;
+        SizeDrinkEntity sizeDrinkEntity = null;
         try{
-            drinkEntity = drinkRepository.findById(drinkSizeRequest.getIdSize()).get();
+            drinkEntity = drinkRepository.findById(drinkSizeRequest.getIdDrink()).get();
             try{
                 sizeEntity = sizeRepository.findById(drinkSizeRequest.getIdSize()).get();
-                SizeDrinkEntity sizeDrinkEntity = new SizeDrinkEntity();
+                sizeDrinkEntity = sizeDrinkRepository.findByDrinkEntityAndSizeEntity(drinkEntity, sizeEntity);
+                if (sizeDrinkEntity != null) {
+                    messageResponse.setMessage("Size drind exists");
+                    messageResponse.setStatus(HttpStatus.CONFLICT);
+                    return messageResponse;
+                }
+                sizeDrinkEntity = new SizeDrinkEntity();
                 sizeDrinkEntity.setSizeEntity(sizeEntity);
                 sizeDrinkEntity.setDrinkEntity(drinkEntity);
                 sizeDrinkEntity.setPrice(drinkSizeRequest.getPrice());

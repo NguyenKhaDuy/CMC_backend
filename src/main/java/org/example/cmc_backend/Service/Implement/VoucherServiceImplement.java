@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -64,14 +65,13 @@ public class VoucherServiceImplement implements VoucherService {
         DataResponse dataResponse = new DataResponse();
         MessageResponse messageResponse = new MessageResponse();
         VoucherDTO voucherDTO = new VoucherDTO();
-        try{
+        try {
             VoucherEntity voucherEntity = voucherRepository.findById(idVoucher).get();
             modelMapper.map(voucherEntity, dataResponse);
             dataResponse.setData(voucherDTO);
             dataResponse.setStatus(HttpStatus.OK);
             dataResponse.setMessage("Success");
-        }catch (NoSuchElementException ex)
-        {
+        } catch (NoSuchElementException ex) {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             messageResponse.setMessage("Voucher Not Found");
             return messageResponse;
@@ -84,6 +84,7 @@ public class VoucherServiceImplement implements VoucherService {
         MessageResponse messageResponse = new MessageResponse();
         VoucherEntity voucherEntity = new VoucherEntity();
         modelMapper.map(voucherRequest, voucherEntity);
+        voucherRepository.save(voucherEntity);
         messageResponse.setStatus(HttpStatus.OK);
         messageResponse.setMessage("Success");
         return messageResponse;
@@ -98,8 +99,7 @@ public class VoucherServiceImplement implements VoucherService {
             voucherRepository.save(voucherEntity);
             messageResponse.setStatus(HttpStatus.OK);
             messageResponse.setMessage("Success");
-        }catch (NoSuchElementException ex)
-        {
+        } catch (NoSuchElementException ex) {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             messageResponse.setMessage("Voucher Not Found");
         }
@@ -114,10 +114,39 @@ public class VoucherServiceImplement implements VoucherService {
             voucherRepository.delete(voucherEntity);
             messageResponse.setStatus(HttpStatus.OK);
             messageResponse.setMessage("Success");
-        }catch (NoSuchElementException ex){
+        } catch (NoSuchElementException ex) {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             messageResponse.setMessage("Voucher Not Found");
         }
         return messageResponse;
+    }
+
+    @Override
+    public Object applyVoucher(String code) {
+        MessageResponse messageResponse = new MessageResponse();
+        DataResponse dataResponse = new DataResponse();
+        try {
+            VoucherEntity voucherEntity = voucherRepository.findByCode(code);
+            if (!LocalDate.now().isBefore(voucherEntity.getExpiration())) {
+                messageResponse.setStatus(HttpStatus.CONFLICT);
+                messageResponse.setMessage("Voucher Expired");
+                return messageResponse;
+            }
+            if (!(voucherEntity.getQuality() > 0)) {
+                messageResponse.setStatus(HttpStatus.CONFLICT);
+                messageResponse.setMessage("Voucher Quality Exceeded");
+                return messageResponse;
+            }
+            VoucherDTO voucherDTO = new VoucherDTO();
+            modelMapper.map(voucherEntity, voucherDTO);
+            dataResponse.setData(voucherDTO);
+            dataResponse.setStatus(HttpStatus.OK);
+            dataResponse.setMessage("Success");
+            return dataResponse;
+        } catch (NoSuchElementException ex) {
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            messageResponse.setMessage("Voucher Not Found");
+            return messageResponse;
+        }
     }
 }

@@ -61,4 +61,13 @@ public class VoucherApi {
         MessageResponse result = voucherService.DeleteVoucher(idVoucher);
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
+
+    @PostMapping(value = "/api/customer/voucher/verify")
+    public ResponseEntity<Object> verifyVoucher(@RequestParam(name = "code") String code) {
+        Object result = voucherService.applyVoucher(code);
+        if (result instanceof MessageResponse){
+            return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 }

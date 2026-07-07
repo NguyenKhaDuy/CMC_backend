@@ -8,6 +8,7 @@ import lombok.Setter;
 public class RatingRequest {
     private Integer star;
     private String comment;
-    private String idMovie;
-    private String idUser;
+    private String movieId;
+    private String userId;
+    private String billId;
 }

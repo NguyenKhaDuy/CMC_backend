@@ -13,13 +13,13 @@ public class RatingApi {
     @Autowired
     RatingService ratingService;
 
-    @DeleteMapping("/api/rating/id-rating={idRating}")
+    @DeleteMapping("/api/customer/rating/id-rating={idRating}")
     public ResponseEntity<Object> deleteRating(@PathVariable Long idRating) {
         MessageResponse result = ratingService.deleteRating(idRating);
         return new ResponseEntity<>(result, result.getStatus());
     }
 
-    @PostMapping("/api/rating")
+    @PostMapping("/api/customer/rating")
     public ResponseEntity<Object> addRating(@RequestBody RatingRequest ratingRequest) {
         MessageResponse result = ratingService.createRating(ratingRequest);
         return new ResponseEntity<>(result, result.getStatus());

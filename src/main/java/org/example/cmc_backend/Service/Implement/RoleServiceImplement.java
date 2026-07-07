@@ -94,6 +94,7 @@ public class RoleServiceImplement implements RoleService {
         try{
             RoleEntity roleEntity = roleRepository.findById(roleRequest.getIdRole()).get();
             modelMapper.map(roleRequest, roleEntity);
+            roleRepository.save(roleEntity);
             messageResponse.setMessage("Success");
             messageResponse.setStatus(HttpStatus.OK);
             return messageResponse;

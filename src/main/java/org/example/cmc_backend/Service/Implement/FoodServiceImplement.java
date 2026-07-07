@@ -160,11 +160,18 @@ public class FoodServiceImplement implements FoodService {
         MessageResponse messageResponse = new MessageResponse();
         SizeEntity sizeEntity = null;
         FoodEntity foodEntity = null;
+        SizeFoodEntity sizeFoodEntity = null;
         try{
-             foodEntity = foodRepository.findById(foodSizeRequest.getIdSize()).get();
+             foodEntity = foodRepository.findById(foodSizeRequest.getIdFood()).get();
             try{
                 sizeEntity = sizeRepository.findById(foodSizeRequest.getIdSize()).get();
-                SizeFoodEntity sizeFoodEntity = new SizeFoodEntity();
+                sizeFoodEntity  = sizeFoodRepository.findByFoodEntityAndSizeEntity(foodEntity, sizeEntity);
+                if (sizeFoodEntity != null) {
+                    messageResponse.setMessage("Size food exist");
+                    messageResponse.setStatus(HttpStatus.CONFLICT);
+                    return messageResponse;
+                }
+                sizeFoodEntity = new SizeFoodEntity();
                 sizeFoodEntity.setSizeEntity(sizeEntity);
                 sizeFoodEntity.setFoodEntity(foodEntity);
                 sizeFoodEntity.setPrice(foodSizeRequest.getPrice());

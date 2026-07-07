@@ -3,15 +3,14 @@ package org.example.cmc_backend.Service.Implement;
 import org.example.cmc_backend.Entity.BranchEntity;
 import org.example.cmc_backend.Entity.RoomEntity;
 import org.example.cmc_backend.Entity.ScheduleEntity;
-import org.example.cmc_backend.Models.DTO.BranchDTO;
-import org.example.cmc_backend.Models.DTO.RoomDTO;
-import org.example.cmc_backend.Models.DTO.ScheduleBranchDTO;
+import org.example.cmc_backend.Models.DTO.*;
 import org.example.cmc_backend.Models.Request.BranchRequest;
 import org.example.cmc_backend.Models.Response.DataPageResponse;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Repository.BranchRepository;
 import org.example.cmc_backend.Service.BranchService;
+import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -46,9 +45,28 @@ public class BranchServiceImplement implements BranchService {
             for (RoomEntity roomEntity : branchEntity.getRoomEntities()) {
                 RoomDTO roomDTO = new RoomDTO();
                 modelMapper.map(roomEntity, roomDTO);
+
+                List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+                for (ScheduleEntity scheduleEntity : roomEntity.getScheduleEntities()) {
+                    ScheduleDTO scheduleDTO = new ScheduleDTO();
+                    modelMapper.map(scheduleEntity, scheduleDTO);
+
+                    MovieDTO movieDTO = new MovieDTO();
+                    modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+                    movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+                    movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+                    movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+                    movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+                    scheduleDTO.setMovieDTO(movieDTO);
+
+                    scheduleDTOS.add(scheduleDTO);
+                }
+                roomDTO.setScheduleDTOS(scheduleDTOS);
+
                 roomDTOS.add(roomDTO);
             }
             branchDTO.setRoomDTOS(roomDTOS);
+
             branchDTOS.add(branchDTO);
         }
         return new PageImpl<>(branchDTOS, branchEntities.getPageable(), branchEntities.getTotalElements());
@@ -67,6 +85,24 @@ public class BranchServiceImplement implements BranchService {
             for (RoomEntity roomEntity : branchEntity.getRoomEntities()) {
                 RoomDTO roomDTO = new RoomDTO();
                 modelMapper.map(roomEntity, roomDTO);
+
+                List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+                for (ScheduleEntity scheduleEntity : roomEntity.getScheduleEntities()) {
+                    ScheduleDTO scheduleDTO = new ScheduleDTO();
+                    modelMapper.map(scheduleEntity, scheduleDTO);
+
+                    MovieDTO movieDTO = new MovieDTO();
+                    modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+                    movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+                    movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+                    movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+                    movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+                    scheduleDTO.setMovieDTO(movieDTO);
+
+                    scheduleDTOS.add(scheduleDTO);
+                }
+                roomDTO.setScheduleDTOS(scheduleDTOS);
+
                 roomDTOS.add(roomDTO);
             }
             branchDTO.setRoomDTOS(roomDTOS);
@@ -90,6 +126,24 @@ public class BranchServiceImplement implements BranchService {
             for (RoomEntity roomEntity : branchEntity.getRoomEntities()) {
                 RoomDTO roomDTO = new RoomDTO();
                 modelMapper.map(roomEntity, roomDTO);
+
+                List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+                for (ScheduleEntity scheduleEntity : roomEntity.getScheduleEntities()) {
+                    ScheduleDTO scheduleDTO = new ScheduleDTO();
+                    modelMapper.map(scheduleEntity, scheduleDTO);
+
+                    MovieDTO movieDTO = new MovieDTO();
+                    modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+                    movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+                    movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+                    movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+                    movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+                    scheduleDTO.setMovieDTO(movieDTO);
+
+                    scheduleDTOS.add(scheduleDTO);
+                }
+                roomDTO.setScheduleDTOS(scheduleDTOS);
+
                 roomDTOS.add(roomDTO);
             }
             branchDTO.setRoomDTOS(roomDTOS);
@@ -109,6 +163,7 @@ public class BranchServiceImplement implements BranchService {
         MessageResponse messageResponse = new MessageResponse();
         BranchEntity branchEntity = new BranchEntity();
         modelMapper.map(branchRequest, branchEntity);
+        branchRepository.save(branchEntity);
         messageResponse.setMessage("Success");
         messageResponse.setStatus(HttpStatus.OK);
         return messageResponse;

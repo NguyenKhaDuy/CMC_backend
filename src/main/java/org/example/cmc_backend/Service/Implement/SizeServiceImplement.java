@@ -93,6 +93,7 @@ public class SizeServiceImplement implements SizeService {
         try{
             SizeEntity sizeEntity = sizeRepository.findById(sizeRequest.getIdSize()).get();
             modelMapper.map(sizeRequest, sizeEntity);
+            sizeRepository.save(sizeEntity);
             messageResponse.setMessage("Success");
             messageResponse.setStatus(HttpStatus.OK);
             return messageResponse;

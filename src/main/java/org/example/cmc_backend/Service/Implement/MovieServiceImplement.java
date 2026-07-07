@@ -101,11 +101,10 @@ public class MovieServiceImplement implements MovieService {
     }
 
     @Override
-    public Object getAllMoviesByBranch(Long idBranch) {
-        DataResponse dataResponse = new DataResponse();
-        MessageResponse messageResponse = new MessageResponse();
-        List<MovieEntity> movieEntities = movieRepository.findMoviesByBranch(idBranch);
+    public DataResponse getAllMovies() {
         List<MovieDTO> movieDTOS = new ArrayList<>();
+        List<MovieEntity> movieEntities = movieRepository.findAll();
+        DataResponse dataResponse = new DataResponse();
         for (MovieEntity movieEntity : movieEntities) {
             MovieDTO movieDTO = new MovieDTO();
             modelMapper.map(movieEntity, movieDTO);
@@ -138,6 +137,76 @@ public class MovieServiceImplement implements MovieService {
                 roomDTO.setBranchDTO(branchDTO);
 
                 scheduleDTO.setRoomDTO(roomDTO);
+
+                scheduleDTOS.add(scheduleDTO);
+            }
+            movieDTO.setScheduleDTOS(scheduleDTOS);
+
+            List<MovieActorDTO> movieActorDTOS = new ArrayList<>();
+            for (ActorMovieEntity actorMovieEntity : movieEntity.getActorMovieEntities()) {
+                MovieActorDTO movieActorDTO = new MovieActorDTO();
+                movieActorDTO.setIdActor(actorMovieEntity.getActorEntity().getIdActor());
+                movieActorDTO.setName(actorMovieEntity.getActorEntity().getName());
+                movieActorDTO.setImage(ConvertByteToBase64.toBase64(actorMovieEntity.getActorEntity().getImage()));
+                movieActorDTO.setDescription(actorMovieEntity.getActorEntity().getDescription());
+                movieActorDTO.set_main(actorMovieEntity.isMain());
+                movieActorDTOS.add(movieActorDTO);
+            }
+            movieDTO.setMovieActorDTOS(movieActorDTOS);
+
+            movieDTOS.add(movieDTO);
+        }
+        dataResponse.setData(movieDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("OK");
+        return dataResponse;
+    }
+
+    @Override
+    public Object getAllMoviesByBranch(Long idBranch) {
+        DataResponse dataResponse = new DataResponse();
+        MessageResponse messageResponse = new MessageResponse();
+        List<MovieEntity> movieEntities = movieRepository.findMoviesByBranch(idBranch);
+        List<MovieDTO> movieDTOS = new ArrayList<>();
+        for (MovieEntity movieEntity : movieEntities) {
+            MovieDTO movieDTO = new MovieDTO();
+            modelMapper.map(movieEntity, movieDTO);
+            movieDTO.setSmallImage(ConvertByteToBase64.toBase64(movieEntity.getSmallImage()));
+            movieDTO.setLargeImage(ConvertByteToBase64.toBase64(movieEntity.getLargeImage()));
+            movieDTO.setIdCategory(movieEntity.getCategoryEntity().getIdCategory());
+            movieDTO.setCategory(movieEntity.getCategoryEntity().getNameCategory());
+
+            List<RatingDTO> ratingDTOS = new ArrayList<>();
+            for (RatingEntity ratingEntity : movieEntity.getRatingEntities()) {
+                RatingDTO ratingDTO = new RatingDTO();
+                modelMapper.map(ratingEntity, ratingDTO);
+                ratingDTO.setIdUser(ratingEntity.getUserEntity().getIdUser());
+                ratingDTO.setNameUser(ratingEntity.getUserEntity().getFullName());
+                ratingDTO.setAvatar(ConvertByteToBase64.toBase64(ratingEntity.getUserEntity().getAvatar()));
+                ratingDTOS.add(ratingDTO);
+            }
+            movieDTO.setRatingDTOS(ratingDTOS);
+
+            List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+            for (ScheduleEntity scheduleEntity : movieEntity.getScheduleEntities()) {
+                Long soldSeat = 0L;
+                ScheduleDTO scheduleDTO = new ScheduleDTO();
+                modelMapper.map(scheduleEntity, scheduleDTO);
+
+                RoomDTO roomDTO = new RoomDTO();
+                modelMapper.map(scheduleEntity.getRoomEntity(), roomDTO);
+
+                BranchDTO branchDTO = new BranchDTO();
+                modelMapper.map(scheduleEntity.getRoomEntity().getBranchEntity(), branchDTO);
+                roomDTO.setBranchDTO(branchDTO);
+                scheduleDTO.setRoomDTO(roomDTO);
+
+                for (StatusSeatEntity statusSeatEntity : scheduleEntity.getStatusSeatEntities()){
+                    if (statusSeatEntity.getStatus().equals("BOOKED")){
+                        soldSeat++;
+                    }
+                }
+                scheduleDTO.setSoldSeats(soldSeat);
 
                 scheduleDTOS.add(scheduleDTO);
             }
@@ -317,8 +386,8 @@ public class MovieServiceImplement implements MovieService {
             messageResponse.setMessage("Category Not Found");
             return messageResponse;
         }
-        movieEntity.setIdMovie(RandomIdUtils.generateRandomId("MV", 10));
         modelMapper.map(movieRequest, movieEntity);
+        movieEntity.setIdMovie(RandomIdUtils.generateRandomId("MV", 10));
         try {
             movieEntity.setSmallImage(movieRequest.getSmallImage().getBytes());
             movieEntity.setLargeImage(movieRequest.getLargeImage().getBytes());
@@ -393,6 +462,7 @@ public class MovieServiceImplement implements MovieService {
         MovieEntity movieEntity = null;
         try {
             movieEntity = movieRepository.findById(addActorForMovieRequest.getIdMovie()).get();
+            movieEntity.getActorMovieEntities().clear();
         } catch (NoSuchElementException ex) {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             messageResponse.setMessage("Movie Not Found");
@@ -407,7 +477,7 @@ public class MovieServiceImplement implements MovieService {
                 return messageResponse;
             }
             ActorMovieEntity actorMovieEntity = new ActorMovieEntity();
-            actorMovieEntity.setMain(addMovieActorRequest.is_main());
+            actorMovieEntity.setMain(addMovieActorRequest.isMain());
             actorMovieEntity.setMovieEntity(movieEntity);
             actorMovieEntity.setActorEntity(actorEntity);
             actorMovieRepository.save(actorMovieEntity);

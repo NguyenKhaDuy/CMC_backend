@@ -14,24 +14,29 @@ import java.util.Base64;
 
 public class ConvertByteToBase64 {
     public static String toBase64(byte[] image) {
-        String base64Image = null;
-        if (image != null && image.length > 0) {
-            try {
-                if (isAlreadyBase64(image)) {
-                    base64Image = new String(image, StandardCharsets.UTF_8);
-                } else {
-                    base64Image = Base64.getEncoder().encodeToString(image);
-                }
-                // Kiểm tra kích thước base64
-                if (isBase64TooLarge(base64Image)) {
-                    // Nén ảnh nếu quá lớn
-                    base64Image = compressAndEncodeImage(image);
-                }
-            } catch (Exception e) {
-                base64Image = null;
-            }
+
+        if (image == null || image.length == 0) {
+            return null;
         }
-        return base64Image;
+
+        try {
+
+            String base64 = Base64.getEncoder().encodeToString(image);
+
+            if (base64.length() > 50000) {
+                String compress = compressAndEncodeImage(image);
+
+                if (compress != null) {
+                    return compress;
+                }
+            }
+
+            return base64;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Base64.getEncoder().encodeToString(image);
+        }
     }
 
     private static boolean isAlreadyBase64(byte[] data) {
@@ -55,7 +60,7 @@ public class ConvertByteToBase64 {
             BufferedImage originalImage = ImageIO.read(bis);
 
             if (originalImage == null) {
-                return null;
+                return Base64.getEncoder().encodeToString(originalImageData);
             }
 
             // Resize nếu quá lớn

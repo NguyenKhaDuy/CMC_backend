@@ -44,11 +44,11 @@ public class MovieEntity {
     private String shortDescription;
 
     @Lob
-    @Column(name = "small_image")
+    @Column(name = "small_image", columnDefinition = "LONGBLOB")
     private byte[] smallImage;
 
     @Lob
-    @Column(name = "large_image")
+    @Column(name = "large_image", columnDefinition = "LONGBLOB")
     private byte [] largeImage;
 
     @Column(name = "trailer")
@@ -60,9 +60,6 @@ public class MovieEntity {
 
     @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<RatingEntity> ratingEntities = new ArrayList<>();
-
-    @ManyToMany(mappedBy = "movieEntities", fetch = FetchType.LAZY)
-    List<UserEntity> userEntities = new ArrayList<>();
 
     @OneToMany(mappedBy = "movieEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     List<ScheduleEntity> scheduleEntities = new ArrayList<>();

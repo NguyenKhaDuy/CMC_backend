@@ -4,6 +4,7 @@ import org.example.cmc_backend.Models.DTO.MovieDTO;
 import org.example.cmc_backend.Models.Request.AddActorForMovieRequest;
 import org.example.cmc_backend.Models.Request.MovieRequest;
 import org.example.cmc_backend.Models.Response.DataPageResponse;
+import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Service.MovieService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,8 @@ public class MovieApi {
     @Autowired
     MovieService movieService;
 
-    @GetMapping(value = "/api/admin/movie")
-    public ResponseEntity<Object> getAllMoviesAdmin(@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
+    @GetMapping(value = "/api/movie")
+    public ResponseEntity<Object> getAllMovies(@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
         Page<MovieDTO> movieDTOS = movieService.getAllMovies(pageNo);
         DataPageResponse dataPageResponse = new DataPageResponse();
         dataPageResponse.setData(movieDTOS.getContent());
@@ -27,6 +28,12 @@ public class MovieApi {
         dataPageResponse.setMessage("Success");
         dataPageResponse.setCurrent_page(pageNo);
         return new ResponseEntity<>(dataPageResponse, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/admin/movie")
+    public ResponseEntity<Object> getAllMoviesAdmin() {
+        DataResponse dataResponse = movieService.getAllMovies();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/movie/branch/id-branch={idBranch}")
@@ -57,13 +64,13 @@ public class MovieApi {
     }
 
     @PostMapping(value = "/api/admin/movie")
-    public ResponseEntity<Object> addMovie(@RequestBody MovieRequest movieRequest){
+    public ResponseEntity<Object> addMovie(@ModelAttribute MovieRequest movieRequest){
         MessageResponse result = movieService.addMovie(movieRequest);
         return new ResponseEntity<>(result, result.getStatus());
     }
 
     @PutMapping(value = "/api/admin/movie")
-    public ResponseEntity<Object> updateMovie(@RequestBody MovieRequest movieRequest){
+    public ResponseEntity<Object> updateMovie(@ModelAttribute MovieRequest movieRequest){
         MessageResponse result = movieService.updateMovie(movieRequest);
         return new ResponseEntity<>(result, result.getStatus());
     }

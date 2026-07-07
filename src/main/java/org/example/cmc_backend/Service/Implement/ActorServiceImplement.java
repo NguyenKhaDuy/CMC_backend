@@ -67,6 +67,32 @@ public class ActorServiceImplement implements ActorService {
     }
 
     @Override
+    public DataResponse GetAllActor() {
+        DataResponse dataResponse = new DataResponse();
+        List<ActorDTO> actorDTOS = new ArrayList<>();
+        List<ActorEntity> actorEntities = actorRepository.findAll();
+        for (ActorEntity actorEntity : actorEntities) {
+            ActorDTO actorDTO = new ActorDTO();
+            List<ActorMovieDTO> actorMovieDTOS = new ArrayList<>();
+            for (ActorMovieEntity actorMovieEntity : actorEntity.getActorMovieEntities()) {
+                ActorMovieDTO actorMovieDTO = new ActorMovieDTO();
+                actorMovieDTO.setIdMovie(actorMovieEntity.getMovieEntity().getIdMovie());
+                actorMovieDTO.setNameMovie(actorMovieEntity.getMovieEntity().getNameMovie());
+                actorMovieDTO.set_main(actorMovieEntity.isMain());
+                actorMovieDTOS.add(actorMovieDTO);
+            }
+            modelMapper.map(actorEntity, actorDTO);
+            actorDTO.setImage(ConvertByteToBase64.toBase64(actorEntity.getImage()));
+            actorDTO.setActorMovieDTOS(actorMovieDTOS);
+            actorDTOS.add(actorDTO);
+        }
+        dataResponse.setData(actorDTOS);
+        dataResponse.setStatus(HttpStatus.OK);
+        dataResponse.setMessage("success");
+        return dataResponse;
+    }
+
+    @Override
     public Object GetActorByMovie(String movieId) {
         MessageResponse messageResponse = new MessageResponse();
         DataResponse dataResponse = new DataResponse();

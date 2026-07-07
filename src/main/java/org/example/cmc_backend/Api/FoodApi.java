@@ -69,7 +69,7 @@ public class FoodApi {
     @PostMapping(value = "/api/admin/food/size")
     public ResponseEntity<Object> addFoodSize(@RequestBody FoodSizeRequest foodSizeRequest) {
         MessageResponse result = foodService.addSizeFood(foodSizeRequest);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(result, result.getStatus());
     }
 
     @PutMapping(value = "/api/admin/food/size")

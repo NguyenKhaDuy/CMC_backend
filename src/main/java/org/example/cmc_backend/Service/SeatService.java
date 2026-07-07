@@ -16,4 +16,5 @@ public interface SeatService {
     Object addSeat(SeatRequest seatRequest); //admin
     Object deleteSeat(Long idSeat); //admin
     Object updateSeat(SeatRequest seatRequest); //admin
+    Object getAllSeatBySchedule(Long idSchedule);
 }

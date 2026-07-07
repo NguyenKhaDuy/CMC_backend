@@ -18,4 +18,5 @@ public interface VoucherService {
     MessageResponse AddVoucher(VoucherRequest voucherRequest);
     MessageResponse UpdateVoucher(VoucherRequest voucherRequest);
     MessageResponse DeleteVoucher(Long idVoucher);
+    Object applyVoucher(String code);
 }

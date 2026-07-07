@@ -1,16 +1,24 @@
 package org.example.cmc_backend.Api;
 
+import jakarta.persistence.OneToMany;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.example.cmc_backend.Entity.RoleEntity;
 import org.example.cmc_backend.Entity.UserEntity;
 import org.example.cmc_backend.Models.DTO.LoginDTO;
+import org.example.cmc_backend.Models.DTO.UserDTO;
 import org.example.cmc_backend.Models.Request.*;
+import org.example.cmc_backend.Models.Response.DataPageResponse;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
+import org.example.cmc_backend.Repository.UserRepository;
 import org.example.cmc_backend.Service.MailService;
 import org.example.cmc_backend.Service.UserService;
+import org.example.cmc_backend.Utils.ConvertByteToBase64;
+import org.example.cmc_backend.Utils.JwtTokenUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,17 +28,49 @@ import java.util.Random;
 public class UserApi {
     @Autowired
     UserService userService;
-
+    @Autowired
+    JwtTokenUtils jwtTokenUtils;
     @Autowired
     MailService mailService;
+    @Autowired
+    UserRepository userRepository;
+
+    @GetMapping("/api/me")
+    public ResponseEntity<?> getCurrentUser(@CookieValue("token") String token) {
+        System.out.println(token);
+        String email = jwtTokenUtils.getUsernameFromJWT(token);
+        UserEntity user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found");
+        }
+
+        if (token == null || !jwtTokenUtils.validateToken(token, user)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
+
+        LoginDTO loginDTO = new LoginDTO();
+        loginDTO.setMessage("Login success");
+        loginDTO.setToken(token);
+        loginDTO.setId_user(user.getIdUser());
+        loginDTO.setFull_name(user.getFullName());
+        loginDTO.setAvatarBase64(ConvertByteToBase64.toBase64(user.getAvatar()));
+        for (RoleEntity roleEntity : user.getRoleEntities()) {
+            loginDTO.getRoles().add(roleEntity.getRole());
+        }
+        loginDTO.setHttpStatus(HttpStatus.OK);
+
+        return ResponseEntity.ok(loginDTO);
+    }
 
     @PostMapping(value = "/api/login")
-    public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response){
+    public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         DataResponse dataResponse = new DataResponse();
         Object result = userService.Login(loginRequest);
         if (result instanceof MessageResponse){
             return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
         }
+
         dataResponse.setData(result);
         dataResponse.setMessage("Success");
         dataResponse.setStatus(HttpStatus.OK);
@@ -40,6 +80,17 @@ public class UserApi {
         cookie.setMaxAge(24 * 60 * 60);
         response.addCookie(cookie);
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
+    }
+
+    @PostMapping("/api/logout")
+    public ResponseEntity<?> logout(HttpServletResponse response) {
+
+        Cookie cookie = new Cookie("token", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok("Logged out");
     }
 
     @PostMapping(value = "/api/register")
@@ -66,7 +117,7 @@ public class UserApi {
         return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }
 
-    @PostMapping(value = "/api/user/avatar")
+    @PostMapping(value = "/api/customer/avatar")
     public ResponseEntity<Object> updateAvatar(@ModelAttribute UpdateAvatarRequest updateAvatarRequest){
         MessageResponse result = userService.UpdateAvatar(updateAvatarRequest);
         return new ResponseEntity<>(result, result.getStatus());
@@ -169,10 +220,16 @@ public class UserApi {
                 fullName = updateEmailRequest.getEmail();
             }
 
-            if (registerRequest == null || updateEmailRequest == null) {
-                messageResponse.setMessage("Phiên làm việc đã hết hạn!");
-                messageResponse.setStatus(HttpStatus.BAD_REQUEST);
-                return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
+            if (type.equals("FORGOT_PASSWORD")) {
+                email = (String) session.getAttribute("data");
+            }
+
+            if(!type.equals("FORGOT_PASSWORD")){
+                if (registerRequest == null || updateEmailRequest == null) {
+                    messageResponse.setMessage("Phiên làm việc đã hết hạn!");
+                    messageResponse.setStatus(HttpStatus.BAD_REQUEST);
+                    return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
+                }
             }
 
             // Tạo mã OTP mới
@@ -205,13 +262,13 @@ public class UserApi {
         }
     }
 
-    @PutMapping(value = "/api/user")
+    @PutMapping(value = "/api/customer")
     public ResponseEntity<Object> updateUser(@RequestBody UpdateUserRequest updateUserRequest) {
         MessageResponse result = userService.updateInformation(updateUserRequest);
         return new ResponseEntity<>(result, result.getStatus());
     }
 
-    @PutMapping(value = "/api/user/email")
+    @PutMapping(value = "/api/customer/email")
     public ResponseEntity<Object> updateUser(@RequestBody UpdateEmailRequest updateEmailRequest, HttpSession session) {
         String otpCode = String.format("%06d", new Random().nextInt(999999));
 
@@ -287,5 +344,37 @@ public class UserApi {
     public ResponseEntity<Object> updatePassword(@RequestBody UpdatePasswordRequest updatePasswordRequest) {
         MessageResponse result = userService.updatePassword(updatePasswordRequest);
         return new ResponseEntity<>(result, result.getStatus());
+    }
+
+    @GetMapping(value = "/api/customer/id={id}")
+    public ResponseEntity<Object> getCustomerById(@PathVariable String id) {
+        Object result = userService.getUserById(id);
+        if(result instanceof MessageResponse) {
+            MessageResponse messageResponse = (MessageResponse) result;
+            return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/admin/id={id}")
+    public ResponseEntity<Object> getCustomerByIdForAdmin(@PathVariable String id) {
+        Object result = userService.getUserById(id);
+        if(result instanceof MessageResponse) {
+            MessageResponse messageResponse = (MessageResponse) result;
+            return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/admin/users")
+    public ResponseEntity<Object> getAdminUsers(@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
+        DataPageResponse dataPageResponse = new DataPageResponse();
+        Page<UserDTO> userDTOS = userService.getUsers(pageNo);
+        dataPageResponse.setStatus(HttpStatus.OK);
+        dataPageResponse.setCurrent_page(pageNo);
+        dataPageResponse.setTotal_page(userDTOS.getTotalPages());
+        dataPageResponse.setData(userDTOS.getContent());
+        dataPageResponse.setMessage("Success");
+        return new ResponseEntity<>(dataPageResponse, HttpStatus.OK);
     }
 }

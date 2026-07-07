@@ -12,4 +12,5 @@ import java.util.List;
 public interface ActorMovieRepository extends JpaRepository<ActorMovieEntity, Long> {
     List<ActorMovieEntity> findByMovieEntity(MovieEntity movieEntity);
     List<ActorMovieEntity> findByActorEntity(ActorEntity actorEntity);
+    void deleteByMovieEntity(MovieEntity movieEntity);
 }

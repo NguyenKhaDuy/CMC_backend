@@ -1,9 +1,6 @@
 package org.example.cmc_backend.Service.Implement;
 
-import org.example.cmc_backend.Entity.BranchEntity;
-import org.example.cmc_backend.Entity.MovieEntity;
-import org.example.cmc_backend.Entity.RoomEntity;
-import org.example.cmc_backend.Entity.ScheduleEntity;
+import org.example.cmc_backend.Entity.*;
 import org.example.cmc_backend.Models.DTO.BranchDTO;
 import org.example.cmc_backend.Models.DTO.MovieDTO;
 import org.example.cmc_backend.Models.DTO.RoomDTO;
@@ -56,6 +53,7 @@ public class ScheduleServiceImplement implements ScheduleService {
         }
         Page<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByMovieEntity(movieEntity, pageable);
         for (ScheduleEntity scheduleEntity : scheduleEntities) {
+            Long soldSeat = 0L;
             ScheduleDTO scheduleDTO = new ScheduleDTO();
             modelMapper.map(scheduleEntity, scheduleDTO);
 
@@ -73,6 +71,13 @@ public class ScheduleServiceImplement implements ScheduleService {
             modelMapper.map(scheduleEntity.getRoomEntity().getBranchEntity(), branchDTO);
             roomDTO.setBranchDTO(branchDTO);
             scheduleDTO.setRoomDTO(roomDTO);
+
+            for (StatusSeatEntity statusSeatEntity : scheduleEntity.getStatusSeatEntities()){
+                if (statusSeatEntity.getStatus().equals("BOOKED")){
+                    soldSeat++;
+                }
+            }
+            scheduleDTO.setSoldSeats(soldSeat);
 
             scheduleDTOS.add(scheduleDTO);
         }
@@ -91,6 +96,7 @@ public class ScheduleServiceImplement implements ScheduleService {
         }
         List<ScheduleEntity> scheduleEntities = scheduleRepository.findAllByMovieEntity(movieEntity);
         for (ScheduleEntity scheduleEntity : scheduleEntities) {
+            Long soldSeat = 0L;
             ScheduleDTO scheduleDTO = new ScheduleDTO();
             modelMapper.map(scheduleEntity, scheduleDTO);
 
@@ -108,6 +114,13 @@ public class ScheduleServiceImplement implements ScheduleService {
             modelMapper.map(scheduleEntity.getRoomEntity().getBranchEntity(), branchDTO);
             roomDTO.setBranchDTO(branchDTO);
             scheduleDTO.setRoomDTO(roomDTO);
+
+            for (StatusSeatEntity statusSeatEntity : scheduleEntity.getStatusSeatEntities()){
+                if (statusSeatEntity.getStatus().equals("BOOKED")){
+                    soldSeat++;
+                }
+            }
+            scheduleDTO.setSoldSeats(soldSeat);
 
             scheduleDTOS.add(scheduleDTO);
         }
@@ -231,12 +244,15 @@ public class ScheduleServiceImplement implements ScheduleService {
             roomDTO.setBranchDTO(branchDTO);
             scheduleDTO.setRoomDTO(roomDTO);
 
+            dataResponse.setData(scheduleDTO);
+            dataResponse.setMessage("Success");
+            dataResponse.setStatus(HttpStatus.OK);
+            return dataResponse;
         } catch (NoSuchElementException ex) {
             messageResponse.setMessage("Cannot find Schedule");
             messageResponse.setStatus(HttpStatus.OK);
             return messageResponse;
         }
-        return dataResponse;
     }
 
     @Override
@@ -281,6 +297,18 @@ public class ScheduleServiceImplement implements ScheduleService {
         modelMapper.map(scheduleRequest, scheduleEntity);
         scheduleEntity.setMovieEntity(movieEntity);
         scheduleEntity.setRoomEntity(roomEntity);
+
+        List<SeatEntity> seatEntities = roomEntity.getSeatEntities();
+        List<StatusSeatEntity> statusSeatEntities = new ArrayList<>();
+        for (SeatEntity seatEntity : seatEntities) {
+            StatusSeatEntity statusSeatEntity = new StatusSeatEntity();
+            statusSeatEntity.setStatus("EMPTY");
+            statusSeatEntity.setSeatEntity(seatEntity);
+            statusSeatEntity.setScheduleEntity(scheduleEntity);
+            statusSeatEntities.add(statusSeatEntity);
+        }
+        scheduleEntity.setStatusSeatEntities(statusSeatEntities);
+
         scheduleRepository.save(scheduleEntity);
 
         messageResponse.setMessage("Success");
