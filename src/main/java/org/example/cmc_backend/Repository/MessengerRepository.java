@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface MessengerRepository extends JpaRepository<MessengerEntity, Long> {
+public interface MessengerRepository extends JpaRepository<MessengerEntity, String> {
     List<MessengerEntity> findByUserEntity_IdUserAndExtractedDataOrderByCreatedAtAsc(String userId, String extractedData);
 
     List<MessengerEntity> findTop12ByUserEntity_IdUserOrderByCreatedAtDesc(String userId);

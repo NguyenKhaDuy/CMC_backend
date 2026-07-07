@@ -93,41 +93,34 @@ public class AiContextServiceImplement implements AiContextService {
         if (normalizedQuestion == null || normalizedQuestion.isBlank()) {
             return "OUT_OF_SCOPE";
         }
-        if (containsAny(normalizedQuestion, "khuyen mai", "giam gia", "voucher", "ma giam", "uu dai", "gia", "bao nhieu", "tien", "re", "dat")) {
+
+        if (containsAny(normalizedQuestion,
+                "bill", "don hang", "booking", "don dat ve", "tinh trang don",
+                "trang thai don", "lich su mua", "don cua toi", "ve da dat")) {
+            return "BILL";
+        }
+
+        if (containsAny(normalizedQuestion, "khuyen mai", "giam gia", "voucher", "ma giam", "uu dai")) {
             return "VOUCHER";
         }
-        if (containsAny(
-                normalizedQuestion,
-                "movie",
-                "phim",
-                "phim dang chieu"
-        )) {
+
+        if (containsAny(normalizedQuestion, "movie", "phim", "phim dang chieu")) {
             return "MOVIE";
         }
-        if (containsAny(
-                normalizedQuestion,
-                "chi nhanh",
-                "rap",
-                "cum rap"
-        )) {
+
+        if (containsAny(normalizedQuestion, "chi nhanh", "rap", "cum rap")) {
             return "BRANCH";
         }
+
         if (containsAny(normalizedQuestion, "loai", "danh muc", "category")) {
             return "CATEGORY";
         }
-        if (containsAny(
-                normalizedQuestion,
-                "lich chieu",
-                "suat chieu",
-                "gio chieu",
-                "ngay chieu",
-                "lich phim",
-                "chieu"
-        )) {
+
+        if (containsAny(normalizedQuestion, "lich chieu", "suat chieu", "gio chieu", "ngay chieu", "lich phim", "chieu")) {
             return "SCHEDULE";
         }
 
-        if (containsAny(normalizedQuestion, "bill", "don", "mua", "ve", "don hang", "booking")) {
+        if (containsAny(normalizedQuestion, "don", "mua", "ve")) {
             return "BILL";
         }
 
@@ -266,9 +259,9 @@ public class AiContextServiceImplement implements AiContextService {
         result.add(bill.getIdBill());
         result.add(bill.getTotalAmount().toString());
         result.add(bill.getCreatedAt().toString());
-        result.add(branchEntity.getNameBranch());
-        result.add(branchEntity.getAddress());
-        result.add(voucherEntity.getCode());
+        result.add(branchEntity == null ? null : branchEntity.getNameBranch());
+        result.add(branchEntity == null ? null : branchEntity.getAddress());
+        result.add(voucherEntity == null ? null : voucherEntity.getCode());
 
         for (TicketEntity ticketEntity : bill.getTicketEntities()) {
             SeatEntity seatEntity = ticketEntity.getSeatEntity();
@@ -398,15 +391,17 @@ public class AiContextServiceImplement implements AiContextService {
             context.append("- id_bill: ").append(safe(billEntity.getIdBill().toString())).append("\n");
             context.append(" created_at: ").append(safe(billEntity.getCreatedAt().toString())).append("\n");
             context.append(" total_amount: ").append(safe(billEntity.getTotalAmount().toString())).append("\n");
-            context.append(" branch: ").append(safe(branchEntity.getNameBranch())).append("\n");
-            context.append(" voucher: ").append(safe(voucherEntity.getCode())).append("\n");
+            context.append(" branch: ").append(branchEntity == null ? "N/A" : safe(branchEntity.getNameBranch())).append("\n");
+            context.append(" voucher: ").append(voucherEntity == null ? "Không sử dụng" : safe(voucherEntity.getCode())).append("\n");
 
             appendTicketContext(context, billEntity);
             appendFoodContext(context, billEntity);
             appendDrinkContext(context, billEntity);
 
-            summary.add("Bill " + billEntity.getIdBill() + " " + branchEntity.getNameBranch() + " " + branchEntity.getAddress() + " " + voucherEntity.getCode());
-
+            summary.add("Bill " + billEntity.getIdBill() + " "
+                    + (branchEntity == null ? "" : branchEntity.getNameBranch()) + " "
+                    + (branchEntity == null ? "" : branchEntity.getAddress()) + " "
+                    + (voucherEntity == null ? "Không voucher" : voucherEntity.getCode()));
         }
     }
 

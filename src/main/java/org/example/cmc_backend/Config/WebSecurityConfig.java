@@ -42,8 +42,8 @@ public class WebSecurityConfig {
                                 .requestMatchers("/api/customer/**").hasRole("CUSTOMER")
                                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated();
-                    })
-                    .formLogin(Customizer.withDefaults());
+                    });
+                    //.formLogin(Customizer.withDefaults());
             return httpSecurity.build();
         } catch (Exception e) {
             throw new RuntimeException(e);

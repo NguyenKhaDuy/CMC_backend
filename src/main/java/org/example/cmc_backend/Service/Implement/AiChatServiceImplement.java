@@ -42,6 +42,9 @@ public class AiChatServiceImplement implements AiChatService {
     @Override
     public ChatResponse chat(UserEntity user, ChatRequest request) {
         String message = validateMessage(request);
+        
+        System.out.println("DEBUG user=" + (user == null ? "NULL" : user.getIdUser() + " / " + user.getEmail()));
+        
         AIChatEntity conversation = conversationService.findOrCreateConversation(user, request == null ? null : request.getConversationId());
         AiContextResult context = contextService.buildContext(user, message);
         ChatMessageDTO userMessage = conversationService.saveUserMessage(user, conversation.getIdSession(), message, context.getIntent());

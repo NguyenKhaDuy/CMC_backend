@@ -29,39 +29,44 @@ public class AiChatApi {
 
     @PostMapping(value = "/api/ai/chat")
     public ChatResponse chat(
-            @AuthenticationPrincipal UserEntity currentUser,
+            //@AuthenticationPrincipal UserEntity currentUser,
             @RequestBody ChatRequest request
     ) {
+    	UserEntity currentUser = userRepository.findByEmail("duynguyenst15@gmail.com");
         return aiChatService.chat(currentUser, request);
     }
 
     @PostMapping(value = "/api/ai/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(
-            @AuthenticationPrincipal UserEntity currentUser,
+            //@AuthenticationPrincipal UserEntity currentUser,
             @RequestBody ChatRequest request
     ) {
+    	UserEntity currentUser = userRepository.findByEmail("duynguyenst15@gmail.com");
         return aiChatService.stream(currentUser, request);
     }
 
     @GetMapping("/api/ai/chat/history")
     public List<ChatHistoryDTO> history(
-            @AuthenticationPrincipal UserEntity currentUser
+            //@AuthenticationPrincipal UserEntity currentUser
     ) {
+    	UserEntity currentUser = userRepository.findByEmail("duynguyenst15@gmail.com");
         return aiChatService.history(currentUser);
     }
 
     @GetMapping("/api/ai/chat/limits")
     public AiUsageLimitDTO limits(
-            @AuthenticationPrincipal UserEntity currentUser
+            //@AuthenticationPrincipal UserEntity currentUser
     ) {
+    	UserEntity currentUser = userRepository.findByEmail("duynguyenst15@gmail.com");
         return aiChatService.usageLimits(currentUser);
     }
 
     @DeleteMapping("/api/ai/chat/history/{conversationId}")
     public ResponseEntity<MessageResponse> deleteHistory(
-            @AuthenticationPrincipal UserEntity currentUser,
+            //@AuthenticationPrincipal UserEntity currentUser,
             @PathVariable String conversationId
     ) {
+    	UserEntity currentUser = userRepository.findByEmail("duynguyenst15@gmail.com");
         aiChatService.deleteHistory(currentUser, conversationId);
         MessageResponse messageResponse = new MessageResponse();
         messageResponse.setMessage("Deleted History");
