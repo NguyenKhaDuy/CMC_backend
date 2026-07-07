@@ -44,4 +44,10 @@ public class ScheduleEntity {
 
     @OneToMany(mappedBy = "scheduleEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<AIChatEntity> aiChatEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "scheduleEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<BillEntity> billEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "scheduleEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<StatusSeatEntity> statusSeatEntities = new ArrayList<>();
 }

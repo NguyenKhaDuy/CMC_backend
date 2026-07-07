@@ -57,16 +57,10 @@ public class DrinkApi {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
-    @DeleteMapping(value = "/api/admin/drink/id-drink={idDrink}")
-    public ResponseEntity<Object> deleteDrink(@PathVariable("idDrink") Long idDrink) {
-        MessageResponse result = drinkService.deleteDrink(idDrink);
-        return new ResponseEntity<>(result, HttpStatus.OK);
-    }
-
     @PostMapping(value = "/api/admin/drink/size")
     public ResponseEntity<Object> addDrinkSize(@RequestBody DrinkSizeRequest drinkSizeRequest) {
         MessageResponse result = drinkService.addSizeDrink(drinkSizeRequest);
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return new ResponseEntity<>(result, result.getStatus());
     }
 
     @PutMapping(value = "/api/admin/drink/size")

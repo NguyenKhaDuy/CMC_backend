@@ -18,8 +18,12 @@ public class BillDTO {
     private Double totalAmount;
     private VoucherDTO voucherDTO;
     private TicketDTO ticketDTO;
+    private String status;
     private String qr;
     private BranchDTO branchDTO;
+    private ScheduleDTO scheduleDTO;
     private List<BillDrinkDetailDTO> billDrinkDetailDTOS;
     private List<BillFoodDetailDTO> billFoodDetailDTOS;
+    private String customerName;
+    private String phoneCustomer;
 }

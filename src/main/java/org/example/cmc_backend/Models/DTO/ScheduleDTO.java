@@ -21,4 +21,5 @@ public class ScheduleDTO {
     private LocalTime timeEnd;
     private MovieDTO movieDTO;
     private RoomDTO roomDTO;
+    private Long soldSeats;
 }

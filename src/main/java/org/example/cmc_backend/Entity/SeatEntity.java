@@ -19,9 +19,6 @@ public class SeatEntity {
     @Column(name = "name")
     private String name;
 
-    @Column(name = "status")
-    private String status;
-
     @ManyToOne
     @JoinColumn(name = "id_room")
     private RoomEntity roomEntity;
@@ -32,5 +29,8 @@ public class SeatEntity {
 
     @OneToMany(mappedBy = "seatEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<TicketEntity> ticketEntities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "seatEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
+    private List<StatusSeatEntity> statusSeatEntities = new ArrayList<>();
 
 }

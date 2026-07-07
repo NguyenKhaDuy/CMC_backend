@@ -1,17 +1,12 @@
 package org.example.cmc_backend.Service.Implement;
 
-import org.example.cmc_backend.Entity.RoomEntity;
-import org.example.cmc_backend.Entity.SeatEntity;
-import org.example.cmc_backend.Entity.SeatTypeEntity;
+import org.example.cmc_backend.Entity.*;
 import org.example.cmc_backend.Models.DTO.SeatDTO;
 import org.example.cmc_backend.Models.DTO.SeatTypeDTO;
 import org.example.cmc_backend.Models.Request.SeatRequest;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
-import org.example.cmc_backend.Repository.BranchRepository;
-import org.example.cmc_backend.Repository.RoomRepository;
-import org.example.cmc_backend.Repository.SeatRepository;
-import org.example.cmc_backend.Repository.SeatTypeRepository;
+import org.example.cmc_backend.Repository.*;
 import org.example.cmc_backend.Service.SeatService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +28,9 @@ public class SeatServiceImplement implements SeatService {
     @Autowired
     RoomRepository roomRepository;
     @Autowired
-    BranchRepository branchRepository;
+    ScheduleRepository scheduleRepository;
+    @Autowired
+    StatusSeatRepository statusSeatRepository;
 
     @Override
     public DataResponse getAllSeats() {
@@ -43,7 +40,6 @@ public class SeatServiceImplement implements SeatService {
         for (SeatEntity seatEntity : seatEntities) {
             SeatDTO seatDTO = new SeatDTO();
             modelMapper.map(seatEntity, seatDTO);
-            seatDTO.setStatus("EMPTY");
             SeatTypeDTO seatTypeDTO = new SeatTypeDTO();
             modelMapper.map(seatEntity.getSeatTypeEntity(), seatTypeDTO);
             seatDTO.setSeatTypeDTO(seatTypeDTO);
@@ -74,7 +70,6 @@ public class SeatServiceImplement implements SeatService {
         for (SeatEntity seatEntity : seatEntities) {
             SeatDTO seatDTO = new SeatDTO();
             modelMapper.map(seatEntity, seatDTO);
-            seatDTO.setStatus("EMPTY");
             SeatTypeDTO seatTypeDTO = new SeatTypeDTO();
             modelMapper.map(seatEntity.getSeatTypeEntity(), seatTypeDTO);
             seatDTO.setSeatTypeDTO(seatTypeDTO);
@@ -136,7 +131,6 @@ public class SeatServiceImplement implements SeatService {
         modelMapper.map(seatRequest, seatEntity);
         seatEntity.setRoomEntity(roomEntity);
         seatEntity.setSeatTypeEntity(seatTypeEntity);
-        seatEntity.setStatus("EMPTY");
         seatRepository.save(seatEntity);
         messageResponse.setMessage("Success");
         messageResponse.setStatus(HttpStatus.OK);
@@ -183,7 +177,6 @@ public class SeatServiceImplement implements SeatService {
             modelMapper.map(seatRequest, seatEntity);
             seatEntity.setRoomEntity(roomEntity);
             seatEntity.setSeatTypeEntity(seatTypeEntity);
-            seatEntity.setStatus("EMPTY");
             seatRepository.save(seatEntity);
             messageResponse.setMessage("Success");
             messageResponse.setStatus(HttpStatus.OK);
@@ -193,5 +186,39 @@ public class SeatServiceImplement implements SeatService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
+    }
+
+    @Override
+    public Object getAllSeatBySchedule(Long idSchedule) {
+        MessageResponse messageResponse = new MessageResponse();
+        DataResponse dataResponse = new DataResponse();
+        ScheduleEntity scheduleEntity = null;
+        RoomEntity roomEntity = null;
+        try{
+            scheduleEntity = scheduleRepository.findById(idSchedule).get();
+            roomEntity = scheduleEntity.getRoomEntity();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Room not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        List<SeatEntity> seatEntities = seatRepository.findAllByRoomEntity(roomEntity);
+        List<SeatDTO> seatDTOS = new ArrayList<>();
+        for (SeatEntity seatEntity : seatEntities) {
+            StatusSeatEntity statusSeatEntity = statusSeatRepository.findBySeatEntityAndScheduleEntity(seatEntity, scheduleEntity);
+            SeatDTO seatDTO = new SeatDTO();
+            modelMapper.map(seatEntity, seatDTO);
+            SeatTypeDTO seatTypeDTO = new SeatTypeDTO();
+            modelMapper.map(seatEntity.getSeatTypeEntity(), seatTypeDTO);
+            seatDTO.setStatus(statusSeatEntity.getStatus());
+            seatDTO.setSeatTypeDTO(seatTypeDTO);
+            seatDTO.setIdRoom(seatEntity.getRoomEntity().getIdRoom());
+            seatDTO.setNameRoom(seatEntity.getRoomEntity().getName());
+            seatDTOS.add(seatDTO);
+        }
+        dataResponse.setData(seatDTOS);
+        dataResponse.setMessage("Success");
+        dataResponse.setStatus(HttpStatus.OK);
+        return dataResponse;
     }
 }

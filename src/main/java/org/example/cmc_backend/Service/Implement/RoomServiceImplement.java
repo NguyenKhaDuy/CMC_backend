@@ -8,6 +8,7 @@ import org.example.cmc_backend.Models.DTO.MovieDTO;
 import org.example.cmc_backend.Models.DTO.RoomDTO;
 import org.example.cmc_backend.Models.DTO.ScheduleDTO;
 import org.example.cmc_backend.Models.Request.RoomRequest;
+import org.example.cmc_backend.Models.Response.DataPageResponse;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Repository.BranchRepository;
@@ -16,6 +17,10 @@ import org.example.cmc_backend.Service.RoomService;
 import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -70,6 +75,40 @@ public class RoomServiceImplement implements RoomService {
     }
 
     @Override
+    public Page<RoomDTO> getAllRooms(Integer pageNo) {
+        Pageable pageable = PageRequest.of(pageNo - 1, 10);
+        Page<RoomEntity> roomEntities = roomRepository.findAll(pageable);
+        List<RoomDTO> roomDTOS = new ArrayList<>();
+        List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+        for (RoomEntity roomEntity : roomEntities) {
+            RoomDTO roomDTO = new RoomDTO();
+            modelMapper.map(roomEntity, roomDTO);
+            BranchDTO branchDTO = new BranchDTO();
+            modelMapper.map(roomEntity.getBranchEntity(), branchDTO);
+            roomDTO.setBranchDTO(branchDTO);
+
+            for (ScheduleEntity scheduleEntity : roomEntity.getScheduleEntities()) {
+                ScheduleDTO scheduleDTO = new ScheduleDTO();
+                modelMapper.map(scheduleEntity, scheduleDTO);
+
+                MovieDTO movieDTO = new MovieDTO();
+                modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+                movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+                movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+                movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+                movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+                scheduleDTO.setMovieDTO(movieDTO);
+
+                scheduleDTOS.add(scheduleDTO);
+            }
+
+            roomDTO.setScheduleDTOS(scheduleDTOS);
+            roomDTOS.add(roomDTO);
+        }
+        return new PageImpl<>(roomDTOS, roomEntities.getPageable(), roomEntities.getTotalElements());
+    }
+
+    @Override
     public Object getRoomById(Long idRoom) {
         DataResponse dataResponse = new DataResponse();
         MessageResponse messageResponse = new MessageResponse();
@@ -100,6 +139,59 @@ public class RoomServiceImplement implements RoomService {
             roomDTO.setScheduleDTOS(scheduleDTOS);
 
             dataResponse.setData(roomDTO);
+            dataResponse.setMessage("Success");
+            dataResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Room not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        return dataResponse;
+    }
+
+    @Override
+    public Object getRoomByBranch(Long idBranch) {
+        DataResponse dataResponse = new DataResponse();
+        MessageResponse messageResponse = new MessageResponse();
+        List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
+        BranchEntity branchEntity = null;
+        List<RoomDTO> roomDTOS = new ArrayList<>();
+        try {
+            branchEntity = branchRepository.findById(idBranch).get();
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("Branch not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+        try{
+            List<RoomEntity> roomEntities = roomRepository.findByBranchEntity(branchEntity);
+            for (RoomEntity roomEntity : roomEntities) {
+                RoomDTO roomDTO = new RoomDTO();
+                modelMapper.map(roomEntity, roomDTO);
+                BranchDTO branchDTO = new BranchDTO();
+                modelMapper.map(roomEntity.getBranchEntity(), branchDTO);
+                roomDTO.setBranchDTO(branchDTO);
+
+                for (ScheduleEntity scheduleEntity : roomEntity.getScheduleEntities()) {
+                    ScheduleDTO scheduleDTO = new ScheduleDTO();
+                    modelMapper.map(scheduleEntity, scheduleDTO);
+
+                    MovieDTO movieDTO = new MovieDTO();
+                    modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+                    movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+                    movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+                    movieDTO.setIdCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getIdCategory());
+                    movieDTO.setCategory(scheduleEntity.getMovieEntity().getCategoryEntity().getNameCategory());
+                    scheduleDTO.setMovieDTO(movieDTO);
+
+                    scheduleDTOS.add(scheduleDTO);
+                }
+
+                roomDTO.setScheduleDTOS(scheduleDTOS);
+
+                roomDTOS.add(roomDTO);
+            }
+            dataResponse.setData(roomDTOS);
             dataResponse.setMessage("Success");
             dataResponse.setStatus(HttpStatus.OK);
         }catch (NoSuchElementException ex){

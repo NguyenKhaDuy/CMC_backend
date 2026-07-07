@@ -14,7 +14,8 @@ import java.util.List;
 
 @Service
 public interface MovieService {
-    Page<MovieDTO> getAllMovies(Integer pageNo); //admin
+    Page<MovieDTO> getAllMovies(Integer pageNo);
+    DataResponse getAllMovies();//admin
     Object getAllMoviesByBranch(Long idBranch); //all
     Object getMovieById(String idMovie); //all
     Object getMovieByCategory(Long idCategory); //all

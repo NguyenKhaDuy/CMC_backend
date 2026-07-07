@@ -29,40 +29,40 @@ public class AiChatApi {
 
     @PostMapping(value = "/api/ai/chat")
     public ChatResponse chat(
+            @AuthenticationPrincipal UserEntity currentUser,
             @RequestBody ChatRequest request
     ) {
-        UserEntity user = userRepository.findById("UUnC91RkHXK").get();
-        System.out.println("Testttttttt" + request);
-        return aiChatService.chat(user, request);
+        return aiChatService.chat(currentUser, request);
     }
 
     @PostMapping(value = "/api/ai/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter stream(
-
+            @AuthenticationPrincipal UserEntity currentUser,
             @RequestBody ChatRequest request
     ) {
-        UserEntity user = userRepository.findById("UUnC91RkHXK").get();
-        return aiChatService.stream(user, request);
+        return aiChatService.stream(currentUser, request);
     }
 
     @GetMapping("/api/ai/chat/history")
-    public List<ChatHistoryDTO> history() {
-        UserEntity user = userRepository.findById("UUnC91RkHXK").get();
-        return aiChatService.history(user);
+    public List<ChatHistoryDTO> history(
+            @AuthenticationPrincipal UserEntity currentUser
+    ) {
+        return aiChatService.history(currentUser);
     }
 
     @GetMapping("/api/ai/chat/limits")
-    public AiUsageLimitDTO limits() {
-        UserEntity user = userRepository.findById("UUnC91RkHXK").get();
-        return aiChatService.usageLimits(user);
+    public AiUsageLimitDTO limits(
+            @AuthenticationPrincipal UserEntity currentUser
+    ) {
+        return aiChatService.usageLimits(currentUser);
     }
 
     @DeleteMapping("/api/ai/chat/history/{conversationId}")
     public ResponseEntity<MessageResponse> deleteHistory(
+            @AuthenticationPrincipal UserEntity currentUser,
             @PathVariable String conversationId
     ) {
-        UserEntity user = userRepository.findById("UUnC91RkHXK").get();
-        aiChatService.deleteHistory(user, conversationId);
+        aiChatService.deleteHistory(currentUser, conversationId);
         MessageResponse messageResponse = new MessageResponse();
         messageResponse.setMessage("Deleted History");
         messageResponse.setStatus(HttpStatus.OK);

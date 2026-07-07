@@ -31,6 +31,7 @@ public class CategoryServiceImplement implements CategoryService {
         for (CategoryEntity categoryEntity : categoryEntities) {
             CategoryDTO categoryDTO = new CategoryDTO();
             modelMapper.map(categoryEntity, categoryDTO);
+            categoryDTO.setName_category(categoryEntity.getNameCategory());
             categoryDTOs.add(categoryDTO);
         }
         return categoryDTOs;
@@ -44,6 +45,7 @@ public class CategoryServiceImplement implements CategoryService {
             CategoryEntity categoryEntity = categoryRepository.findById(id_category).get();
             CategoryDTO categoryDTO = new CategoryDTO();
             modelMapper.map(categoryEntity, categoryDTO);
+            categoryDTO.setName_category(categoryEntity.getNameCategory());
             dataResponse.setData(categoryDTO);
             dataResponse.setStatus(HttpStatus.OK);
             dataResponse.setMessage("Success");

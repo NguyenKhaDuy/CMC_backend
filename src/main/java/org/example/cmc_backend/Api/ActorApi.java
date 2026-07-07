@@ -3,6 +3,7 @@ package org.example.cmc_backend.Api;
 import org.example.cmc_backend.Models.DTO.ActorDTO;
 import org.example.cmc_backend.Models.Request.ActorRequest;
 import org.example.cmc_backend.Models.Response.DataPageResponse;
+import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Service.ActorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ public class ActorApi {
     @Autowired
     ActorService actorService;
 
-    @GetMapping(value = "/api/admin/actor/")
+    @GetMapping(value = "/api/admin/actor")
     public ResponseEntity<Object> getAllActors(@RequestParam(name = "pageNo", defaultValue = "1") Integer pageNo) {
         DataPageResponse dataPageResponse = new DataPageResponse();
         Page<ActorDTO> actorDTOS = actorService.GetAllActor(pageNo);
@@ -26,6 +27,12 @@ public class ActorApi {
         dataPageResponse.setCurrent_page(pageNo);
         dataPageResponse.setStatus(HttpStatus.OK);
         return new ResponseEntity<>(dataPageResponse, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/admin/actor/all")
+    public ResponseEntity<Object> getAllActorsAdmin() {
+        DataResponse dataResponse = actorService.GetAllActor();
+        return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
 
     @GetMapping(value = "/api/actor/id-movie={idMovie}")

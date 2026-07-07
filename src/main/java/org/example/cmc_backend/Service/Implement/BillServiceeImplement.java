@@ -14,6 +14,10 @@ import org.example.cmc_backend.Utils.ConvertByteToBase64;
 import org.example.cmc_backend.Utils.RandomIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +57,8 @@ public class BillServiceeImplement implements BillService {
     SizeDrinkRepository sizeDrinkRepository;
     @Autowired
     SizeFoodRepository sizeFoodRepository;
+    @Autowired
+    StatusSeatRepository statusSeatRepository;
 
 
     @Override
@@ -76,8 +82,10 @@ public class BillServiceeImplement implements BillService {
 
             //set voucher
             VoucherDTO voucherDTO = new VoucherDTO();
-            modelMapper.map(billEntity.getVoucherEntity(), voucherDTO);
-            billDTO.setVoucherDTO(voucherDTO);
+            if (billEntity.getVoucherEntity() != null) {
+                modelMapper.map(billEntity.getVoucherEntity(), voucherDTO);
+                billDTO.setVoucherDTO(voucherDTO);
+            }
 
             //set branch
             BranchDTO branchDTO = new BranchDTO();
@@ -101,6 +109,16 @@ public class BillServiceeImplement implements BillService {
             }
             billDTO.setTicketDTO(ticketDTO);
 
+            //set lịch chiếu
+            ScheduleDTO scheduleDTO = new ScheduleDTO();
+            ScheduleEntity scheduleEntity = billEntity.getScheduleEntity();
+            modelMapper.map(scheduleEntity, scheduleDTO);
+            MovieDTO movieDTO = new MovieDTO();
+            modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+            movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+            movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+            scheduleDTO.setMovieDTO(movieDTO);
+            billDTO.setScheduleDTO(scheduleDTO);
 
             //Set list drink
             List<BillDrinkDetailDTO> billDrinkDetailDTOS = new ArrayList<>();
@@ -138,6 +156,106 @@ public class BillServiceeImplement implements BillService {
     }
 
     @Override
+    public Page<BillDTO> getAllBills(Integer pageNo) {
+        Pageable pageable = PageRequest.of(pageNo - 1, 30);
+        Page<BillEntity> billEntities = billRepository.findAll(pageable);
+        List<BillDTO> billDTOS = new ArrayList<>();
+        for (BillEntity billEntity : billEntities) {
+            BillDTO billDTO = new BillDTO();
+            modelMapper.map(billEntity, billDTO);
+            billDTO.setQr(ConvertByteToBase64.toBase64(billEntity.getQr()));
+
+            billDTO.setCustomerName(billEntity.getUserEntity().getFullName());
+            billDTO.setPhoneCustomer(billEntity.getUserEntity().getPhone());
+
+            //set voucher
+            VoucherDTO voucherDTO = new VoucherDTO();
+            if (billEntity.getVoucherEntity() != null) {
+                modelMapper.map(billEntity.getVoucherEntity(), voucherDTO);
+                billDTO.setVoucherDTO(voucherDTO);
+            }
+
+            //set branch
+            BranchDTO branchDTO = new BranchDTO();
+            branchDTO.setRoomDTOS(null);
+            modelMapper.map(billEntity.getBranchEntity(), branchDTO);
+            billDTO.setBranchDTO(branchDTO);
+
+            //set ticket
+            TicketDTO ticketDTO = new TicketDTO();
+            List<SeatDTO> seatDTOS = new ArrayList<>();
+            for (TicketEntity ticketEntity : billEntity.getTicketEntities()) {
+                SeatDTO seatDTO = new SeatDTO();
+                modelMapper.map(ticketEntity.getSeatEntity(), seatDTO);
+                seatDTO.setIdRoom(ticketEntity.getSeatEntity().getRoomEntity().getIdRoom());
+                seatDTO.setNameRoom(ticketEntity.getSeatEntity().getRoomEntity().getName());
+                SeatTypeDTO seatTypeDTO = new SeatTypeDTO();
+                modelMapper.map(ticketEntity.getSeatEntity().getSeatTypeEntity(), seatTypeDTO);
+                seatDTO.setSeatTypeDTO(seatTypeDTO);
+                seatDTOS.add(seatDTO);
+                ticketDTO.setSeatDTOS(seatDTOS);
+            }
+            billDTO.setTicketDTO(ticketDTO);
+
+            //set lịch chiếu
+            ScheduleDTO scheduleDTO = new ScheduleDTO();
+            ScheduleEntity scheduleEntity = billEntity.getScheduleEntity();
+            modelMapper.map(scheduleEntity, scheduleDTO);
+            MovieDTO movieDTO = new MovieDTO();
+            modelMapper.map(scheduleEntity.getMovieEntity(), movieDTO);
+            movieDTO.setSmallImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getSmallImage()));
+            movieDTO.setLargeImage(ConvertByteToBase64.toBase64(scheduleEntity.getMovieEntity().getLargeImage()));
+            scheduleDTO.setMovieDTO(movieDTO);
+            billDTO.setScheduleDTO(scheduleDTO);
+
+            //Set list drink
+            List<BillDrinkDetailDTO> billDrinkDetailDTOS = new ArrayList<>();
+            for (BillDrinkDetailEntity billDrinkDetailEntity : billEntity.getBillDrinkDetailEntities()) {
+                BillDrinkDetailDTO billDrinkDetailDTO = new BillDrinkDetailDTO();
+                modelMapper.map(billDrinkDetailEntity, billDrinkDetailDTO);
+                billDrinkDetailDTO.setNameDrink(billDrinkDetailEntity.getSizeDrinkEntity().getDrinkEntity().getName());
+                billDrinkDetailDTO.setIdDrink(billDrinkDetailEntity.getSizeDrinkEntity().getDrinkEntity().getId());
+                billDrinkDetailDTO.setSize(billDrinkDetailEntity.getSizeDrinkEntity().getSizeEntity().getSize());
+                billDrinkDetailDTO.setPrice(billDrinkDetailEntity.getSizeDrinkEntity().getPrice());
+                billDrinkDetailDTOS.add(billDrinkDetailDTO);
+            }
+            billDTO.setBillDrinkDetailDTOS(billDrinkDetailDTOS);
+
+            //set list food
+            List<BillFoodDetailDTO> billFoodDetailDTOS = new ArrayList<>();
+            for (BillFoodDetailEntity billFoodDetailEntity : billEntity.getBillFoodDetailEntities()) {
+                BillFoodDetailDTO billFoodDetailDTO = new BillFoodDetailDTO();
+                modelMapper.map(billFoodDetailEntity, billFoodDetailDTO);
+                billFoodDetailDTO.setNameFood(billFoodDetailEntity.getSizeFoodEntity().getFoodEntity().getName());
+                billFoodDetailDTO.setIdFood(billFoodDetailEntity.getSizeFoodEntity().getFoodEntity().getIdFood());
+                billFoodDetailDTO.setSize(billFoodDetailEntity.getSizeFoodEntity().getSizeEntity().getSize());
+                billFoodDetailDTO.setPrice(billFoodDetailEntity.getSizeFoodEntity().getPrice());
+                billFoodDetailDTOS.add(billFoodDetailDTO);
+            }
+            billDTO.setBillFoodDetailDTOS(billFoodDetailDTOS);
+
+            billDTOS.add(billDTO);
+        }
+        return new PageImpl<>(billDTOS, billEntities.getPageable(), billEntities.getTotalElements());
+    }
+
+    @Override
+    public MessageResponse updateStatusBill(String idBill, String status) {
+        MessageResponse messageResponse = new MessageResponse();
+        try{
+            BillEntity billEntity = billRepository.findById(idBill).get();
+            billEntity.setStatus(status);
+            billRepository.save(billEntity);
+            messageResponse.setMessage("Success");
+            messageResponse.setStatus(HttpStatus.OK);
+        }catch (NoSuchElementException ex){
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            messageResponse.setMessage("Bill not found");
+        }
+        return messageResponse;
+    }
+
+    @Override
     public MessageResponse booking(BookingRequest bookingRequest) {
         MessageResponse messageResponse = new MessageResponse();
         BranchEntity branchEntity = null;
@@ -150,11 +268,13 @@ public class BillServiceeImplement implements BillService {
         BillEntity billEntity = new BillEntity();
         VoucherEntity voucherEntity = null;
         Long totalPriceTicket = 0L;
-        if (bookingRequest.getVoucherCode() != null) {
+        if (!bookingRequest.getVoucherCode().equals("")) {
             try{
                 voucherEntity = voucherRepository.findByCode(bookingRequest.getVoucherCode());
                 if (LocalDate.now().isBefore(voucherEntity.getExpiration())){
                     billEntity.setVoucherEntity(voucherEntity);
+                    voucherEntity.setQuality(voucherEntity.getQuality() - 1);
+                    voucherRepository.save(voucherEntity);
                 }else{
                     billEntity.setVoucherEntity(null);
                 }
@@ -181,7 +301,8 @@ public class BillServiceeImplement implements BillService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
             return messageResponse;
         }
-        String idBill = RandomIdUtils.generateRandomId("B", 10);
+        String idBill = bookingRequest.getIdBooking();
+        billEntity.setStatus("UNUSE");
         billEntity.setUserEntity(userEntity);
         billEntity.setBranchEntity(branchEntity);
         billEntity.setCreatedAt(LocalDateTime.now());
@@ -218,6 +339,7 @@ public class BillServiceeImplement implements BillService {
                 ticketEntities.add(ticketEntity);
             }
             billEntity.setTicketEntities(ticketEntities);
+            billEntity.setScheduleEntity(scheduleEntity);
         }catch (NoSuchElementException ex){
             messageResponse.setMessage("Can not found schedule");
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
@@ -258,8 +380,10 @@ public class BillServiceeImplement implements BillService {
         billRepository.save(billEntity);
         for (Long idSeat : bookingRequest.getIdSeats()){
             SeatEntity seatEntity = seatRepository.findById(idSeat).get();
-            seatEntity.setStatus("BOOKED");
-            seatRepository.save(seatEntity);
+
+            StatusSeatEntity statusSeatEntity = statusSeatRepository.findBySeatEntityAndScheduleEntity(seatEntity, scheduleEntity);
+            statusSeatEntity.setStatus("BOOKED");
+            statusSeatRepository.save(statusSeatEntity);
         }
         messageResponse.setStatus(HttpStatus.CREATED);
         messageResponse.setMessage("Created");

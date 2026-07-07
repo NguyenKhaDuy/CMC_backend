@@ -3,7 +3,10 @@ package org.example.cmc_backend.Service.Implement;
 import org.example.cmc_backend.Entity.RoleEntity;
 import org.example.cmc_backend.Entity.UserEntity;
 import org.example.cmc_backend.Models.DTO.LoginDTO;
+import org.example.cmc_backend.Models.DTO.RoleDTO;
+import org.example.cmc_backend.Models.DTO.UserDTO;
 import org.example.cmc_backend.Models.Request.*;
+import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.example.cmc_backend.Repository.RoleRepository;
 import org.example.cmc_backend.Repository.UserRepository;
@@ -14,12 +17,18 @@ import org.example.cmc_backend.Utils.JwtTokenUtils;
 import org.example.cmc_backend.Utils.RandomIdUtils;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
@@ -225,5 +234,49 @@ public class UserServiceImplement implements UserService {
         }catch (NoSuchElementException ex){
             return null;
         }
+    }
+
+    @Override
+    public Object getUserById(String idUser) {
+        MessageResponse messageResponse = new MessageResponse();
+        DataResponse dataResponse = new DataResponse();
+        try{
+            UserEntity userEntity = userRepository.findById(idUser).get();
+            UserDTO userDTO = new UserDTO();
+            modelMapper.map(userEntity, userDTO);
+            List<String> roles = new ArrayList<>();
+            for (RoleEntity roleEntity : userEntity.getRoleEntities()){
+                roles.add(roleEntity.getRole());
+            }
+            userDTO.setRoles(roles);
+            userDTO.setAvatar(ConvertByteToBase64.toBase64(userEntity.getAvatar()));
+            dataResponse.setStatus(HttpStatus.OK);
+            dataResponse.setMessage("Successfully");
+            dataResponse.setData(userDTO);
+            return dataResponse;
+        }catch (NoSuchElementException ex){
+            messageResponse.setMessage("User not found");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
+    }
+
+    @Override
+    public Page<UserDTO> getUsers(Integer pageNo) {
+        Pageable pageable = PageRequest.of(pageNo - 1, 10);
+        Page<UserEntity> userEntities = userRepository.findAll(pageable);
+        List<UserDTO> userDTOs = new ArrayList<>();
+        for (UserEntity userEntity : userEntities) {
+            UserDTO userDTO = new UserDTO();
+            modelMapper.map(userEntity, userDTO);
+            userDTO.setAvatar(ConvertByteToBase64.toBase64(userEntity.getAvatar()));
+            List<String> role = new ArrayList<>();
+            for (RoleEntity roleEntity : userEntity.getRoleEntities()){
+                role.add(roleEntity.getRole());
+            }
+            userDTO.setRoles(role);
+            userDTOs.add(userDTO);
+        }
+        return new PageImpl<>(userDTOs, userEntities.getPageable(), userEntities.getTotalElements());
     }
 }

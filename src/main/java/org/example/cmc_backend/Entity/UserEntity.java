@@ -48,10 +48,6 @@ public class UserEntity implements UserDetails {
     @ManyToMany(mappedBy = "userEntities", fetch = FetchType.LAZY)
     List<RoleEntity> roleEntities = new ArrayList<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "movie_favorite", joinColumns = @JoinColumn(name = "id_user"), inverseJoinColumns = @JoinColumn(name = "id_movie"))
-    private List<MovieEntity> movieEntities = new ArrayList<>();
-
     @OneToMany(mappedBy = "userEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<BillEntity> billEntities = new ArrayList<>();
 
@@ -67,6 +63,7 @@ public class UserEntity implements UserDetails {
     @OneToMany(mappedBy = "userEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<AIUsageLogEntity> aiUsageLogEntities = new ArrayList<>();
 
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         List<SimpleGrantedAuthority> authorities = getRoleEntities().stream()
@@ -77,6 +74,6 @@ public class UserEntity implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        return getEmail();
     }
 }

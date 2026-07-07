@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 
 @Repository
-public interface AIUsageLogRepository extends JpaRepository<AIUsageLogEntity, Long> {
+public interface AIUsageLogRepository extends JpaRepository<AIUsageLogEntity, String> {
     @Query("""
             select count(log)
             from AIUsageLogEntity log

@@ -25,6 +25,9 @@ public class BillEntity {
     @Column(name = "total_amount")
     private Double totalAmount;
 
+    @Column(name = "status")
+    private String status;
+
     @Lob
     @Column(name = "qr", columnDefinition = "LONGBLOB")
     private byte[] qr;
@@ -37,6 +40,10 @@ public class BillEntity {
 
     @OneToMany(mappedBy = "billEntity", fetch = FetchType.LAZY, cascade = {CascadeType.MERGE, CascadeType.PERSIST}, orphanRemoval = true)
     private List<BillDrinkDetailEntity> billDrinkDetailEntities = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "id_schedule")
+    private ScheduleEntity scheduleEntity;
 
     @ManyToOne
     @JoinColumn(name = "id_voucher")

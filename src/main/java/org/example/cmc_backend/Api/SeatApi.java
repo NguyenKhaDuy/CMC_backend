@@ -29,6 +29,24 @@ public class SeatApi {
         return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
+    @GetMapping(value = "/api/seat/id-room={idRoom}")
+    public ResponseEntity<Object> getAllSeatsByRoom(@PathVariable Long idRoom) {
+        Object result = seatService.getAllSeatsByRoom(idRoom);
+        if(result instanceof MessageResponse){
+            return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/api/seat/id-schedule={id}")
+    public ResponseEntity<Object> getAllSeatsBySchedule(@PathVariable Long id) {
+        Object result = seatService.getAllSeatBySchedule(id);
+        if(result instanceof MessageResponse){
+            return new ResponseEntity<>(result, ((MessageResponse) result).getStatus());
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
+
     @GetMapping(value = "/api/admin/seat/id-seat={idSeat}")
     public ResponseEntity<Object> getSeatById(@PathVariable Long idSeat) {
         Object result = seatService.getSeatById(idSeat);

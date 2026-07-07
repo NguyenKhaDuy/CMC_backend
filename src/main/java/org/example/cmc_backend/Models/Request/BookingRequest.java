@@ -9,6 +9,7 @@ import java.util.List;
 @Setter
 public class BookingRequest {
     private String idUser;
+    private String idBooking;
     private Long idBranch;
     private String voucherCode;
     private String idMovie;
@@ -17,4 +18,5 @@ public class BookingRequest {
     private List<Long> idSeats;
     private List<BookingDrinkRequest> bookingDrinkRequests;
     private List<BookingFoodRequest> bookingFoodRequests;
+    private String bank;
 }

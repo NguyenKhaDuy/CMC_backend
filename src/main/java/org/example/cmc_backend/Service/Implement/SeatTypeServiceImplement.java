@@ -91,6 +91,7 @@ public class SeatTypeServiceImplement implements SeatTypeService {
         try{
             SeatTypeEntity seatTypeEntity = seatTypeRepository.findById(seatTypeRequest.getIdSeatType()).get();
             modelMapper.map(seatTypeRequest, seatTypeEntity);
+            seatTypeRepository.save(seatTypeEntity);
             messageResponse.setMessage("Success");
             messageResponse.setStatus(HttpStatus.OK);
             return messageResponse;
