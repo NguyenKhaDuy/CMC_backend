@@ -2,6 +2,7 @@ package org.example.cmc_backend.Service;
 
 import org.example.cmc_backend.Models.DTO.ScheduleDTO;
 import org.example.cmc_backend.Models.Request.ScheduleRequest;
+import org.example.cmc_backend.Models.Request.ScheduleStatusRequest;
 import org.example.cmc_backend.Models.Response.MessageResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -20,4 +21,5 @@ public interface ScheduleService {
     MessageResponse addSchedule(ScheduleRequest scheduleRequest); //admin
     MessageResponse updateSchedule(ScheduleRequest scheduleRequest); //admin
     MessageResponse deleteSchedule(Long idSchedule); //admin
+    MessageResponse updateStatus(ScheduleStatusRequest scheduleStatusRequest);
 }

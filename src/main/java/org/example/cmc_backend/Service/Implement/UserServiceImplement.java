@@ -193,12 +193,13 @@ public class UserServiceImplement implements UserService {
         MessageResponse messageResponse = new MessageResponse();
         try {
             UserEntity userEntity = userRepository.findById(updatePasswordRequest.getIdUser()).get();
-            if (!userEntity.getPassword().equals(passwordEncoder.encode(updatePasswordRequest.getOldPassword()))){
+            if (!passwordEncoder.matches(updatePasswordRequest.getOldPassword(), userEntity.getPassword())){
                 messageResponse.setMessage("Password incorrect");
                 messageResponse.setStatus(HttpStatus.BAD_REQUEST);
                 return messageResponse;
             }
             userEntity.setPassword(passwordEncoder.encode(updatePasswordRequest.getNewPassword()));
+            userRepository.save(userEntity);
             messageResponse.setMessage("Password updated successfully");
             messageResponse.setStatus(HttpStatus.OK);
         }catch (NoSuchElementException ex){

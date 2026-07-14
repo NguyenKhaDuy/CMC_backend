@@ -34,6 +34,9 @@ public class ScheduleEntity {
     @DateTimeFormat(pattern = "HH:mm:ss")
     private LocalTime timeEnd;
 
+    @Column(name = "status")
+    private boolean status;
+
     @ManyToOne()
     @JoinColumn(name = "id_movie")
     private MovieEntity movieEntity;

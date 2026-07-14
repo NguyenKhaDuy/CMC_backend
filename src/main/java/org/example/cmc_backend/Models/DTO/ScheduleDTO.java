@@ -19,6 +19,7 @@ public class ScheduleDTO {
     private LocalTime timeStart;
     @DateTimeFormat(pattern = "HH:mm:ss")
     private LocalTime timeEnd;
+    private boolean status;
     private MovieDTO movieDTO;
     private RoomDTO roomDTO;
     private Long soldSeats;

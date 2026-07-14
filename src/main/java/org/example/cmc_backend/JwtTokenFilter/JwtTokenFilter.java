@@ -82,29 +82,23 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                         new WebAuthenticationDetailsSource()
                                 .buildDetails(request)
                 );
-
                 SecurityContextHolder.getContext()
                         .setAuthentication(auth);
             }
 
         } catch (Exception e) {
-
             System.out.println("JWT FILTER ERROR: " + e.getMessage());
-
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
         filterChain.doFilter(request, response);
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
-
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("token".equals(cookie.getName())) {
@@ -112,59 +106,59 @@ public class JwtTokenFilter extends OncePerRequestFilter {
                 }
             }
         }
-
         return null;
     }
 
     private boolean isBypassToken(@NonNull HttpServletRequest request) {
 
-//        String path = request.getRequestURI();
-//
-//        if (path.startsWith("/swagger-ui")
-//                || path.startsWith("/v3/api-docs")
-//                || path.startsWith("/swagger-resources")
-//                || path.startsWith("/webjars")) {
-//            return true;
-//        }
-//
-//        if (path.startsWith("/favicon.ico")
-//                || path.startsWith("/css/")
-//                || path.startsWith("/js/")
-//                || path.startsWith("/images/")) {
-//            return true;
-//        }
-//
-//        if (path.startsWith("/login") || path.startsWith("/register")) {
-//            return true;
-//        }
-//
-//        final List<String> publicApis = Arrays.asList(
-//                "/api/forgotpassword",
-//                "/api/login",
-//                "/api/logout",
-//                "/api/resend-otp",
-//                "/api/register",
-//                "/api/verify-otp",
-//                "/api/actor/",
-//                "/api/voucher/",
-//                "/api/schedule/",
-//                "/api/movie",
-//                "/api/category",
-//                "/api/branch",
-//                "/api/seat",
-//                "/swagger-ui/**",
-//                "/v3/api-docs/**",
-//                "/api/send-otp/forgotPassword",
-//                "/api/forgot/password",
-//                "/api/resend-otp"
-//        );
-//
-//        for (String api : publicApis) {
-//            if (path.startsWith(api)) {
-//                return true;
-//            }
-//        }
+        String path = request.getRequestURI();
 
-        return true;
+        if (path.startsWith("/swagger-ui")
+                || path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-resources")
+                || path.startsWith("/webjars")) {
+            return true;
+        }
+
+        if (path.startsWith("/favicon.ico")
+                || path.startsWith("/css/")
+                || path.startsWith("/js/")
+                || path.startsWith("/images/")) {
+            return true;
+        }
+
+        if (path.startsWith("/login") || path.startsWith("/register")) {
+            return true;
+        }
+
+        final List<String> publicApis = Arrays.asList(
+                "/api/forgotpassword",
+                "/api/login",
+                "/api/logout",
+                "/api/resend-otp",
+                "/api/register",
+                "/api/verify-otp",
+                "/api/actor/",
+                "/api/voucher/",
+                "/api/schedule/",
+                "/api/movie",
+                "/api/category",
+                "/api/branch",
+                "/api/seat",
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+                "/api/send-otp/forgotPassword",
+                "/api/forgot/password",
+                "/api/resend-otp",
+                "/api/voucher"
+        );
+
+        for (String api : publicApis) {
+            if (path.startsWith(api)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

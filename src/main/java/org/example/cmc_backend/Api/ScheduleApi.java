@@ -2,6 +2,7 @@ package org.example.cmc_backend.Api;
 
 import org.example.cmc_backend.Models.DTO.ScheduleDTO;
 import org.example.cmc_backend.Models.Request.ScheduleRequest;
+import org.example.cmc_backend.Models.Request.ScheduleStatusRequest;
 import org.example.cmc_backend.Models.Response.DataPageResponse;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
@@ -101,5 +102,11 @@ public class ScheduleApi {
     public ResponseEntity<Object> deleteSchedule(@PathVariable Long idSchedule) {
         MessageResponse result = scheduleService.deleteSchedule(idSchedule);
         return new ResponseEntity<>(result, result.getStatus());
+    }
+
+    @PutMapping(value = "/api/admin/schedule/status")
+    public ResponseEntity<Object> updateScheduleStatus(@RequestBody ScheduleStatusRequest scheduleStatusRequest) {
+        MessageResponse messageResponse = scheduleService.updateStatus(scheduleStatusRequest);
+        return new ResponseEntity<>(messageResponse, messageResponse.getStatus());
     }
 }

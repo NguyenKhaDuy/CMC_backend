@@ -6,6 +6,7 @@ import org.example.cmc_backend.Models.DTO.MovieDTO;
 import org.example.cmc_backend.Models.DTO.RoomDTO;
 import org.example.cmc_backend.Models.DTO.ScheduleDTO;
 import org.example.cmc_backend.Models.Request.ScheduleRequest;
+import org.example.cmc_backend.Models.Request.ScheduleStatusRequest;
 import org.example.cmc_backend.Models.Response.DataPageResponse;
 import org.example.cmc_backend.Models.Response.DataResponse;
 import org.example.cmc_backend.Models.Response.MessageResponse;
@@ -44,7 +45,7 @@ public class ScheduleServiceImplement implements ScheduleService {
     @Override
     public Page<ScheduleDTO> getAllSchedulesByMovie(String idMovie, Integer pageNo) {
         List<ScheduleDTO> scheduleDTOS = new ArrayList<>();
-        Pageable pageable = PageRequest.of(pageNo - 1, 10);
+        Pageable pageable = PageRequest.of(pageNo - 1, 3);
         MovieEntity movieEntity = null;
         try {
             movieEntity = movieRepository.findById(idMovie).get();
@@ -295,6 +296,7 @@ public class ScheduleServiceImplement implements ScheduleService {
 
         ScheduleEntity scheduleEntity = new ScheduleEntity();
         modelMapper.map(scheduleRequest, scheduleEntity);
+        scheduleEntity.setStatus(true);
         scheduleEntity.setMovieEntity(movieEntity);
         scheduleEntity.setRoomEntity(roomEntity);
 
@@ -383,5 +385,22 @@ public class ScheduleServiceImplement implements ScheduleService {
             messageResponse.setStatus(HttpStatus.NOT_FOUND);
         }
         return messageResponse;
+    }
+
+    @Override
+    public MessageResponse updateStatus(ScheduleStatusRequest scheduleStatusRequest) {
+        MessageResponse messageResponse = new MessageResponse();
+        try {
+            ScheduleEntity scheduleEntity = scheduleRepository.findById(scheduleStatusRequest.getIdSchedule()).get();
+            scheduleEntity.setStatus(scheduleStatusRequest.isStatus());
+            scheduleRepository.save(scheduleEntity);
+            messageResponse.setMessage("Success");
+            messageResponse.setStatus(HttpStatus.OK);
+            return messageResponse;
+        }catch (NoSuchElementException e){
+            messageResponse.setMessage("Cannot find Schedule");
+            messageResponse.setStatus(HttpStatus.NOT_FOUND);
+            return messageResponse;
+        }
     }
 }
