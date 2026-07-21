@@ -20,7 +20,7 @@ import java.util.concurrent.Executor;
 
 @Service
 public class AiChatServiceImplement implements AiChatService {
-    private static final int MAX_MESSAGE_LENGTH = 1000;
+    private static final int MAX_MESSAGE_LENGTH = 1000000;
 
     private final AiConversationService conversationService;
     private final AiContextService contextService;

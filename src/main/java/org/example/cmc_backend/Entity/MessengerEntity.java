@@ -19,7 +19,7 @@ public class MessengerEntity {
     @Column(name = "sender_type")
     private String senderType;
 
-    @Column(name = "message_text")
+    @Column(name = "message_text", columnDefinition = "LONGTEXT")
     private String messageText;
 
     @Column(name = "intent_deceted")

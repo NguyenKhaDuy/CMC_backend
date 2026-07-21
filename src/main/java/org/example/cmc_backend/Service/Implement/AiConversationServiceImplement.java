@@ -19,7 +19,7 @@ import java.util.UUID;
 @Service
 public class AiConversationServiceImplement implements AiConversationService {
     private static final int STATUS_ACTIVE = 1;
-    private static final int LEGACY_MESSAGE_TEXT_LIMIT = 240;
+    private static final int LEGACY_MESSAGE_TEXT_LIMIT = 10000000;
     private static final String SENDER_USER = "USER";
     private static final String SENDER_AI = "AI";
     private static final String TRUNCATED_SUFFIX = "\n[Da rut gon khi luu lich su vi cot MESSAGE_TEXT trong database dang qua ngan.]";

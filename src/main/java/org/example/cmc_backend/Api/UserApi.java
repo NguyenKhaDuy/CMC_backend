@@ -80,7 +80,7 @@ public class UserApi {
         Cookie cookie = new Cookie("token", ((LoginDTO) result).getToken());
         cookie.setHttpOnly(false); // Nếu frontend cần đọc token để set Authorization header
         cookie.setPath("/");
-        cookie.setMaxAge(24 * 60 * 60);
+        cookie.setMaxAge(3 * 24 * 60 * 60);
         response.addCookie(cookie);
         return new ResponseEntity<>(dataResponse, HttpStatus.OK);
     }
